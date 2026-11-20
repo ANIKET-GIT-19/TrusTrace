@@ -1,0 +1,17 @@
+{
+  "name": "tip-autopsy-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tip Autopsy — Evidence-literacy web app for first-time Indian retail investors. We grade the information, not the investment.",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "lint": "npm --prefix frontend run lint && npm --prefix backend run lint",
+    "typecheck": "npm --prefix frontend run typecheck && npm --prefix backend run typecheck",
+    "test": "npm --prefix frontend run test -- --run && npm --prefix backend run test -- --run",
+    "build": "npm --prefix frontend run build && npm --prefix backend run build"
+  }
+}

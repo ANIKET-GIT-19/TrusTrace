@@ -8,61 +8,63 @@
 
 ## 1. Architecture Summary
 
-Tip Autopsy is a TypeScript React web client backed by a Python FastAPI service and PostgreSQL. The client is mobile-first and communicates with the backend through versioned JSON REST endpoints. Historical market, surveillance, SEBI-register, and curated tip data are loaded as dated snapshots. The backend computes the five market/lateness checks, benchmark-adjusted creator statistics, and facts-card content deterministically.
+Tip Autopsy is a TypeScript React web client backed by a **Node.js + Express (TypeScript)** API service (MERN-based architecture) and **Supabase (PostgreSQL)** for relational snapshot persistence. The client is mobile-first and communicates with the backend through versioned JSON and multipart REST endpoints. Historical market, surveillance, SEBI-register, and curated tip/media data are loaded as dated snapshots in Supabase PostgreSQL. The backend computes the five market/lateness checks, benchmark-adjusted creator statistics, and Information Verdict (facts-card) content deterministically.
 
-A language model is isolated behind a parser adapter and may only transform unstructured tip text into a validated Claim Ledger with source spans. It cannot provide market data, decide risk statuses, calculate track records, or write facts-card narrative. If parsing is unavailable, the structured influencer + stock path remains fully usable.
+When a user enters the site, they can submit **any photo, video, or pasted text**, paired with the **influencer name** and **stock/instrument name**. A bounded AI / multimodal extraction adapter (OCR/vision for photos, audio transcription/frame extraction for short videos, and Hinglish text parsing) is isolated behind a parser adapter and may only extract source text and propose a validated Claim Ledger with source spans. It cannot provide market data, decide risk statuses, calculate track records, or write facts-card narrative. If media or text parsing is unavailable, the user-supplied influencer + stock lookup path remains fully usable.
 
 ### 1.1 Selected stack
 
-The source specification permits React + Tailwind, FastAPI or Express, PostgreSQL, a bounded LLM, Sarvam voice, and scheduled snapshot ingestion. This blueprint makes the following concrete selections for speed and maintainability:
+The source specification permits React + Tailwind, FastAPI or Express, PostgreSQL, a bounded LLM, Sarvam voice, and scheduled snapshot ingestion. This blueprint selects a **MERN-based TypeScript stack backed by Supabase PostgreSQL** for unified frontend/backend language ergonomics, rapid iteration, and managed PostgreSQL tooling:
 
 | Layer | Selected technology | Reason for selection |
 |---|---|---|
 | Frontend | React, TypeScript, Vite | Fast feedback loop, component ecosystem, static deployment, and type-safe API integration. |
-| Styling and UI | Tailwind CSS with accessible Radix/shadcn-style primitives | Rapid, consistent responsive UI without building every primitive from scratch. |
+| Styling and UI | Tailwind CSS with accessible Radix/shadcn-style primitives + Phosphor Icons (`@phosphor-icons/react`) | Rapid, consistent responsive UI matching `DESIGN.md` v2.0 without Lucide or emoji icons. |
 | Client routing | React Router | Clear step-based user flow and shareable routes without server rendering requirements. |
 | Server-state | TanStack Query | Request caching, retries, loading/error states, and invalidation for read-heavy evidence views. |
 | Local state | React Context + `useReducer` | Keeps transient tip input, current analysis, selected chart marker, and Pause & Plan responses in memory only. |
 | Charting | Recharts with a custom marker interaction layer | Suitable for interactive price/volume charts and accessible tooltip/detail behavior. |
-| Backend | Python 3.12+ and FastAPI | Typed REST contracts, quick development, and a natural fit for statistical and data-processing modules. |
-| Validation | Pydantic v2 | Strict request/response schemas and parser-output validation. |
-| ORM and migrations | SQLAlchemy 2 + Alembic | Relational persistence and explicit, reviewable schema changes. |
-| Database | PostgreSQL | Relational joins across creators, tips, stocks, dates, and snapshots; reliable constraints and indexes. |
-| Statistical/data tools | NumPy, pandas, SciPy | Reproducible calculations, historical data processing, and Beta distribution quantiles. |
-| Backend tests | pytest | Fast unit and integration testing of deterministic logic and API contracts. |
-| Frontend tests | Vitest + React Testing Library; Playwright for E2E | Component, behavior, and complete user-flow coverage. |
+| Backend | Node.js 22+, Express, TypeScript (`tsx` / `tsc`) | Unified TypeScript across the MERN-based stack, clean middleware pipeline, and fast REST development. |
+| Validation | Zod | Strict runtime request/response schemas, environment validation, and parser-output validation. |
+| Multipart handling | Multer (`memoryStorage()`) | Enforces transient in-memory photo/video buffers with strict MIME/magic-byte and size caps; never writes user uploads to disk. |
+| Database | Supabase (Managed PostgreSQL) | Relational joins across creators, tips, stocks, dates, and immutable snapshots; reliable constraints, indexes, RLS, and MCP-assisted migrations. |
+| DB client & migrations | `pg` / `@supabase/supabase-js` (server-side service role) + Supabase SQL migrations (`supabase/migrations/`) | Parameterized SQL queries, versioned declarative/imperative SQL migrations, and Supabase security advisors. |
+| Statistical/decimal tools | `decimal.js` + pure TypeScript Beta-Binomial statistics module | Exact financial decimal arithmetic and reproducible Beta distribution quantiles with zero native build dependencies. |
+| Backend tests & lint | Vitest, Supertest, ESLint, `tsc --noEmit` | Fast unit and HTTP integration testing of deterministic logic, Output Guard, and API contracts. |
+| Frontend tests & lint | Vitest, React Testing Library, Playwright, ESLint | Component, behavior, and complete user-flow coverage. |
 | Frontend hosting | Netlify | Straightforward static React deployment and preview deploys. |
-| Backend hosting | Render web service | Simple FastAPI deployment with environment-managed secrets and logs. |
-| Production database | Render PostgreSQL | Keeps the initial deployment topology small and avoids introducing a separate database operator. |
+| Backend hosting | Render web service | Simple Node.js/Express deployment with environment-managed secrets and logs. |
+| Production database | Supabase PostgreSQL | Managed PostgreSQL with branching/staging support, backups, and security advisors. |
 | Optional voice | Sarvam Voice API | Matches the product specification's optional Hindi/Kannada/English readout. |
 
-Use a single repository with separate `frontend/` and `backend/` workspaces. Do not add Redis, a message broker, microservices, or Kubernetes for Version 1; none is needed for the expected scale or demo workflow.
+Use a single repository with separate `frontend/`, `backend/`, and `supabase/` workspaces. Do not add MongoDB, Redis, a message broker, microservices, or Kubernetes for Version 1; none is needed for the expected scale or demo workflow.
 
 ### 1.2 High-level component view
 
 ```mermaid
 flowchart TD
     U[Mobile / Desktop Browser] --> FE[React + TypeScript Client]
-    FE --> API[FastAPI REST API]
-    API --> PARSE[Bounded Claim Parser Adapter]
+    FE -->|"Photo / Video / Text + Influencer & Stock"| API[Node.js + Express REST API]
+    API -->|"Transient in-memory extraction"| PARSE[Bounded Multimodal & Claim Parser Adapter]
     API --> ENGINE[Deterministic Evidence Engine]
     API --> REPORT[Template Report Builder + Output Guard]
-    ENGINE --> DB[(PostgreSQL Snapshots)]
+    ENGINE --> DB[(Supabase PostgreSQL Snapshots)]
     REPORT --> DB
-    PARSE --> VALIDATE[Pydantic + Source-Span Validation]
+    PARSE --> VALIDATE[Zod + Source-Span Validation]
     VALIDATE --> FE
     INGEST[Snapshot Ingestion Jobs] --> DB
+    CORPUS[Curated photos/ & videos/ Corpus] --> INGEST
     VOICE[Optional Sarvam Voice Adapter] -. guarded text only .-> API
 ```
 
 ### 1.3 Request lifecycle
 
-1. The browser submits pasted tip text to the parse endpoint or retrieves an influencer/stock through structured lookup.
-2. The parser adapter returns a proposed Claim Ledger. The backend validates its schema, normalizes entities, checks source spans against the original text, and marks unsupported or absent fields `Not stated`.
-3. The browser requests dated evidence. The backend loads the relevant snapshot versions and calculates every check using deterministic Python modules.
-4. The report builder assembles facts-card sentences from approved templates and verified values.
+1. The browser submits a photo, video, or pasted tip text alongside the user-entered **influencer name** and **stock/instrument name** (or selects a curated sample from `photos/` or `videos/`).
+2. If media is provided, the bounded multimodal adapter validates file type/size/duration, transiently extracts visible text/transcript in memory (deleting any ephemeral buffer immediately after parsing), and proposes a Claim Ledger. The backend validates its schema, normalizes entities, checks source spans against the extracted/pasted text, and marks unsupported, gated (`SL PAID` / `SL. VIP PREMIUM`), or absent fields `Not stated`.
+3. The browser requests dated evidence for the resolved stock/instrument and influencer name. The backend loads the relevant snapshot versions and calculates SEBI register matching and every deterministic market check.
+4. The report builder assembles the **Information Verdict (Guarded Facts Card)** sentences from approved templates and verified values.
 5. The Output Guard validates every system-authored sentence. If unsafe content is found, the report is blocked and a safe fallback is returned.
-6. The browser renders provenance, status labels, and the mandatory disclaimer. User-entered text and Pause & Plan answers remain in active client memory and are not persisted.
+6. The browser renders the matched stock context, Information Verdict, provenance, status labels, and the mandatory disclaimer. User-submitted photos, videos, text, and Pause & Plan answers remain in active client memory only and are never persisted.
 
 ## 2. Repository and Module Boundaries
 
@@ -73,7 +75,7 @@ Recommended repository layout (a target structure for implementation, not files 
 ├── frontend/
 │   ├── src/
 │   │   ├── app/              # Router, providers, application shell
-│   │   ├── components/       # Reusable UI primitives
+│   │   ├── components/       # Reusable UI primitives + verbatim DashBoardBackground.jsx
 │   │   ├── features/
 │   │   │   ├── input/
 │   │   │   ├── claim-ledger/
@@ -85,38 +87,44 @@ Recommended repository layout (a target structure for implementation, not files 
 │   │   └── types/            # API and domain types
 │   └── ...
 ├── backend/
-│   ├── app/
-│   │   ├── api/              # FastAPI routers and dependency wiring
-│   │   ├── core/             # Settings, logging, error types
-│   │   ├── db/               # SQLAlchemy models, session, migrations
+│   ├── src/
+│   │   ├── api/              # Express routers, middleware, and request validation
+│   │   ├── core/             # Zod env settings, structured logging, error types
+│   │   ├── db/               # Supabase / pg client, typed repositories, query helpers
 │   │   ├── domain/
-│   │   │   ├── claims/       # Claim Ledger schema and normalization
+│   │   │   ├── claims/       # Claim Ledger Zod schemas and normalization
 │   │   │   ├── disclosure/   # Disclosure classifier
 │   │   │   ├── hype/         # Phrase detection
 │   │   │   ├── sebi/         # Register matching
-│   │   │   ├── market_checks/# Five deterministic checks
-│   │   │   ├── track_record/ # Benchmark adjustment and Beta-Binomial
-│   │   │   └── output_guard/ # Templates, guard, safe fallback
-│   │   ├── integrations/     # LLM and optional Sarvam adapters
-│   │   ├── ingestion/        # Snapshot loaders and validation
-│   │   └── main.py
+│   │   │   ├── market-checks/# Five deterministic checks
+│   │   │   ├── track-record/ # Benchmark adjustment and Beta-Binomial
+│   │   │   └── output-guard/ # Templates, guard, safe fallback
+│   │   ├── integrations/     # LLM, multimodal OCR/ASR extraction, and optional Sarvam adapters
+│   │   ├── ingestion/        # Snapshot loaders and validation scripts
+│   │   ├── app.ts            # Express app factory (testable via Supertest)
+│   │   └── server.ts         # HTTP server entry point
 │   ├── tests/
 │   └── ...
+├── supabase/
+│   └── migrations/           # Versioned PostgreSQL SQL migrations (applied via Supabase MCP/CLI)
+├── photos/                   # Curated Hinglish tip screenshots (<Influencer>__<Stock>__<Registration>.jpeg)
+├── videos/                   # Curated Hinglish finfluencer clips (<Influencer>__<Stock>__<Registration>.App.mp4)
+├── ui-ux/                    # Approved visual references (hero.jpeg, DashBoard.png, verbatim DashBoardBackground.jsx)
 ├── docs/                     # Approved methodology and data-source notes
-└── TASKS.md / PRD.md / ARCHITECTURE.md / AGENTS.md
+└── TASKS.md / PRD.md / ARCHITECTURE.md / DESIGN.md / AGENTS.md
 ```
 
-Keep calculations independent from FastAPI route handlers. Route handlers validate requests and orchestrate domain services; they must not contain threshold logic or statistical formulas.
+Keep calculations independent from Express route handlers. Route handlers validate requests with Zod and orchestrate domain services; they must not contain threshold logic or statistical formulas.
 
 ## 3. Data Architecture
 
 ### 3.1 Persistence principles
 
-Persist curated reference data and dated public/synthetic datasets. Do not persist end-user profiles, accounts, portfolios, raw pasted tips, Pause & Plan answers, or user-level analysis history.
+Persist curated reference data and dated public/synthetic datasets. Do not persist end-user profiles, accounts, portfolios, user-uploaded photos or videos, raw pasted tips, Pause & Plan answers, or user-level analysis history.
 
-A user's pasted text is transient input. The parser endpoint may forward it to the configured LLM provider under the provider's data-handling terms, but the application must not write it to PostgreSQL, analytics events, traces, exception messages, or ordinary logs. Do not send raw pasted text to third-party analytics.
+User-submitted photos, videos, and pasted text are transient inputs. The intake endpoint may forward transient media/text to a configured server-side OCR/ASR/LLM extraction provider under reviewed data-handling terms, but the application must not write user-uploaded files or raw tip text to PostgreSQL, permanent object/disk storage, analytics events, traces, exception messages, or ordinary logs. Ephemeral media buffers must be discarded immediately when extraction completes or fails. Do not send raw user text or media to third-party analytics.
 
-Publicly sourced creator names/handles in the curated tip corpus are dataset content, not end-user profile data; still minimize retained fields and document source/usage rights.
+Publicly sourced creator names/handles and the curated `photos/` and `videos/` demo corpus are dataset content, not end-user profile data; still minimize retained fields and document source/usage rights.
 
 ### 3.2 Relational entities
 
@@ -168,9 +176,11 @@ Use a uniqueness constraint on (`snapshot_id`, `registration_no`). Never infer r
 
 | Field | Type / constraint | Purpose |
 |---|---|---|
-| `ticker` | text primary key | Canonical exchange ticker. |
-| `company_name` | text | Company name. |
+| `ticker` | text primary key | Canonical exchange ticker or curated instrument identifier (e.g., `WIPRO`, `BORORENEW`, `SARVESHWAR`, `NIFTY_25500_CE`, `SENSEX_82900_CE`). |
+| `company_name` | text | Company or contract display name. |
 | `exchange` | enum: `NSE`, `BSE` | Exchange. |
+| `instrument_type` | enum: `EQUITY`, `DERIVATIVE` | Distinguishes cash equities from index/stock option contracts so equity-only checks (`market_cap`, `surveillance`) return `COULD_NOT_VERIFY` cleanly for options when inapplicable. |
+| `underlying_ticker` | text, nullable | Optional underlying index/equity key (e.g., `NIFTY_50`, `SENSEX`) for derivative context. |
 | `circuit_band` | text, nullable | Most recent imported band; dated surveillance snapshots remain authoritative for historical queries. |
 | `created_at` | timestamptz | Row creation time. |
 
@@ -206,7 +216,7 @@ Unique key: (`ticker`, `snapshot_id`). Do not classify when market cap, circuit-
 | Field | Type / constraint | Purpose |
 |---|---|---|
 | `id` | UUID primary key | Row identifier. |
-| `benchmark_key` | text, indexed | Index identifier; Version 1 uses `NIFTY_50`. |
+| `benchmark_key` | text, indexed | Index identifier; Version 1 uses `NIFTY_50` (required for track-record adjustment) and optional overview benchmarks `SENSEX` and `BANKNIFTY`. |
 | `trading_date` | date | Trading session. |
 | `close` | numeric(18, 4) | Official/verified index close. |
 | `snapshot_id` | UUID foreign key to `data_snapshot` | Exact source snapshot. |
@@ -254,14 +264,15 @@ Store public enforcement-case references and the associated security/date window
 
 Store dataset key, start/end times, snapshot identifier, status, imported/rejected counts, validation summary, and a safe error summary. Do not store secrets or raw user text.
 
-### 3.3 Database rules and indexes
+### 3.3 Database rules, RLS, and indexes
 
 - Use foreign keys and explicit enum/check constraints for statuses and data labels.
 - Store all dates as dates when time-of-day is not meaningful; use timezone-aware timestamps for ingestion/audit times.
-- Store market prices and market caps as decimals, never binary floating-point values in persistence.
+- Store market prices and market caps as `numeric` decimals, never binary floating-point values in persistence; perform arithmetic in TypeScript with `decimal.js`.
 - Index ticker/date history, creator/ticker/tip-date lookups, snapshot date/domain, and SEBI normalized-name/registration lookup.
 - Keep imported snapshots immutable. A correction creates a new snapshot/version and preserves prior provenance.
-- Use SQL migrations for every schema change. Avoid ad hoc production schema changes.
+- Enable **Row Level Security (RLS)** on every table in the `public` schema in Supabase PostgreSQL as defense-in-depth, with no permissive `anon`/`authenticated` write policies (and route all client queries exclusively through the Express backend using server-side credentials so Output Guard and deterministic checks cannot be bypassed via direct Data API access).
+- Use versioned Supabase SQL migrations (`supabase/migrations/`) for every schema change and run Supabase security/performance advisors (`get_advisors`). Avoid ad hoc production schema changes.
 - Never add user accounts, user profiles, portfolios, saved tips, or raw-input history tables in Version 1.
 
 ## 4. Deterministic Domain Logic
@@ -313,16 +324,19 @@ For each historical tip that has a valid direction, tip date, stated deadline, a
 
 Do not display an unadjusted creator leaderboard or imply that past outcomes predict future returns. The 20-tip floor is an initial conservative implementation policy and must be revisited during evaluation; it is not a claim contained in the source specification.
 
-### 4.4 Claim Ledger and bounded language model
+### 4.4 Multimodal Intake, Claim Ledger, and Bounded Language Model
 
-- The LLM adapter receives only the text required for parsing and a constrained extraction instruction.
-- Its only allowed output is a schema-constrained object containing stock, direction, target price, deadline, stop-loss, and source-span offsets/quotes.
-- Validate JSON with Pydantic. Reject invalid types, unsupported fields, out-of-range spans, or evidence quotes that do not match the original text.
-- Normalize ticker candidates against the local stock catalogue. Do not accept a model-invented ticker as a verified security.
+- **Multimodal input validation:** Accept image uploads (`.jpeg`, `.jpg`, `.png`, `.webp`), short video uploads (`.mp4`, `.webm`, `.mov`), or plain Hinglish/English text, alongside user-supplied `influencer_name` and `stock_name`. Enforce server-side MIME/magic-byte verification, max file size limits, and max video duration limits before processing.
+- **Transient extraction:** For photos, run bounded OCR/vision text extraction; for videos, extract speech transcript (ASR) and/or keyframe text transiently in memory/ephemeral buffer and discard the media immediately after extraction. Never trust an arbitrary uploaded filename for registration status or stock verification.
+- **Curated media corpus convention (`photos/` & `videos/`):** Preloaded demo assets use `<Influencer_Name>__<Stock_Name>__<Registration>` filenames (`Ashish_Kyal__Sensex_82900_CE__Not_Registered.jpeg`, `Chinmay_Dudhane__Nifty_25500_CE__Registered.jpeg`, `Harsh_Bhagat__Nifty_25600_CE__Not_Registered.jpeg`, `Rakesh_Bansal__Borosil_Renewables_Ltd__Registered.App.mp4`, `Rakesh_Bansal__Sarveshwar_Foods__Registered.App.mp4`, `Vivek_Rana__Wipro_Limited__Not_Registered.App.mp4`). During seed ingestion, these map to curated `influencer`, `stock`, `tip`, and dated `sebi_register_entry` records with explicit `Mixed` / `Synthetic` provenance; live user analysis always resolves SEBI registration deterministically against `sebi_register_entry` snapshots.
+- **Bounded parser contract:** The LLM adapter receives only the extracted/pasted text required for parsing and a constrained extraction instruction.
+- Its only allowed output is a schema-constrained object containing stock/instrument, direction, target price, deadline, stop-loss (marking gated cues like `SL PAID` or `SL. VIP PREMIUM` as `NOT_STATED` / gated), and source-span offsets/quotes.
+- Validate JSON with Zod. Reject invalid types, unsupported fields, out-of-range spans, or evidence quotes that do not match the extracted/pasted source text.
+- Normalize ticker/instrument candidates against the local stock catalogue (incorporating the user-entered `stock_name` as authoritative fallback/override). Do not accept a model-invented ticker as a verified security.
 - Missing fields remain `Not stated`. Low-confidence or ambiguous fields are marked `Unclear` and require structured lookup or user correction.
 - The parser must not return risk scores, market facts, SEBI conclusions, probability claims, or report prose.
-- Provider failure, timeout, or schema failure returns a clear parser-unavailable state and offers structured lookup/manual correction.
-- Evaluate extraction on approximately 100 hand-labelled Hinglish posts against a keyword baseline, measuring field-level precision/recall and span correctness.
+- Provider failure, OCR/ASR timeout, or schema failure returns a clear parser-unavailable state while immediately continuing with the user-entered **influencer name** and **stock name** for deterministic checks and Information Verdict assembly.
+- Evaluate extraction on approximately 100 hand-labelled Hinglish posts (plus the curated `photos/` and `videos/` corpus) against a keyword baseline, measuring field-level precision/recall and span correctness.
 
 ### 4.5 Hype and disclosure detection
 
@@ -331,11 +345,11 @@ Do not display an unadjusted creator leaderboard or imply that past outcomes pre
 - Disclosure grading uses transparent rules and supporting evidence. A plain `#ad` keyword baseline is required for evaluation. The production rule set must be reviewed against the current applicable SEBI guidance before release.
 - `Clear disclosure`, `Vague`, and `None` are descriptive classifications; they are not a legal compliance certification. If the text is too short or ambiguous, return `UNKNOWN`/`Unclear` rather than pretending the grade is certain.
 
-## 5. Output Guard and Facts Card
+## 5. Output Guard and Information Verdict (Facts Card)
 
 ### 5.1 Template-only narrative
 
-Every system-authored facts-card sentence must be assembled from a reviewed template and validated values. No free-form LLM output may reach a facts card. Templates use neutral factual language, for example:
+Every system-authored facts-card sentence (the **Information Verdict**) must be assembled from a reviewed template and validated values. No free-form LLM output may reach a facts card. Templates use neutral factual language, for example:
 
 - `Volume was {ratio}x the prior-period average on {date}.`
 - `The stock was listed on the {list_name} surveillance list in the snapshot dated {date}.`
@@ -356,24 +370,26 @@ The blocklist is defense in depth, not the primary safety mechanism. The primary
 
 ## 6. REST API Design
 
-Use `/api` as the API prefix, JSON request/response bodies, Pydantic request schemas, consistent error envelopes, and OpenAPI documentation from FastAPI. Route handlers must orchestrate domain services and must not duplicate calculations.
+Use `/api` as the API prefix, JSON request/response bodies, Zod request/response schemas, consistent error envelopes, and documented REST contracts from Express. Route handlers must orchestrate domain services and must not duplicate calculations.
 
 ### 6.1 Core endpoints
 
 | Method and path | Purpose | Request/query | Response summary |
 |---|---|---|---|
-| `POST /api/tips/parse` | Parse pasted Hinglish/English tip into a Claim Ledger. | `{ "text": "...", "locale": "auto" }` | Claim fields, `Not stated` flags, source spans, hype phrase spans, disclosure grade, parser version, and fallback state. Raw text is not persisted. |
+| `POST /api/tips/parse` | Parse pasted Hinglish/English tip text or uploaded photo/video (plus user-entered `influencer_name` and `stock_name`) into a Claim Ledger. | JSON (`{ "text": "...", "influencer_name": "...", "stock_name": "...", "locale": "auto" }`) or `multipart/form-data` (`file` photo/video + `text`, `influencer_name`, `stock_name`) | Extracted source text/transcript (when media supplied), Claim fields, `Not stated` / gated flags, source spans, hype phrase spans, disclosure grade, parser version, and fallback state. User media and raw text are not persisted. |
 | `GET /api/influencers/lookup?q=` | Deterministic SEBI register lookup. | `q`, optional `asOf` | Candidate match status (`REGISTERED`, `NOT_FOUND`, `UNCLEAR`), registration metadata where exact/validated, snapshot date, and match explanation. |
-| `GET /api/stocks/lookup?q=` | Search the local stock catalogue for structured input. | `q` | Canonical ticker, company name, exchange, and data availability. |
+| `GET /api/stocks/lookup?q=` | Search the local stock/instrument catalogue for structured input. | `q` | Canonical ticker, company/instrument name, `instrument_type` (`EQUITY` / `DERIVATIVE`), exchange, and data availability. |
 | `GET /api/stocks/{ticker}/prices?from=&to=` | Retrieve price and volume series for the Tip Time Machine. | Ticker and date range | Date, close, volume, source snapshot ID, as-of date, and Real/Synthetic label. |
 | `GET /api/influencers/{id}/tips?ticker=&date=` | Retrieve tip markers or exact-date tip details. | Creator ID, ticker, optional date | With no date, return chart markers; with a date, return only matching tips for that creator-stock-date. Include source URL and data label. |
 | `GET /api/stocks/{ticker}/checks?asOf=&tipDate=&influencerId=` | Calculate five checks and creator interval. | Ticker, as-of date, tip date, optional creator ID | Five check objects, track-record interval/state, methodology versions, source snapshot IDs, and dates. |
-| `POST /api/report` | Build and guard the facts card. | Validated Claim Ledger/context, ticker, tip date, creator ID where available. | Template sections, evidence references, Output Guard status, provenance labels, and mandatory disclaimer. |
+| `POST /api/report` | Build and guard the Information Verdict (facts card). | Validated Claim Ledger/context, ticker/instrument, tip date, creator ID or entered influencer name. | Template sections, stock context, evidence references, Output Guard status, provenance labels, and mandatory disclaimer. |
 
 ### 6.2 Supporting endpoints
 
 | Method and path | Purpose |
 |---|---|
+| `GET /api/meta/demo-cases` | List curated Hinglish influencer photo/video demo cases from `photos/` and `videos/` with display metadata and provenance labels. |
+| `GET /api/meta/benchmarks` | Retrieve dated `NIFTY_50`, `SENSEX`, and `BANKNIFTY` snapshot summaries and sparklines for the Dashboard Market Overview strip (`Real` label + `as_of_date`, or `Could not verify`). |
 | `GET /api/meta/snapshots` | List available dataset snapshot dates, status, and provenance. |
 | `GET /api/health` | Liveness/readiness check without exposing secrets or internal configuration. |
 
@@ -438,32 +454,33 @@ Do not include stack traces, API keys, SQL details, raw pasted input, or provide
 
 ### 7.2 Privacy requirements
 
-- Do not persist pasted tips, Pause & Plan responses, or end-user identifiers.
-- Redact user input from application logs, error traces, analytics, and provider error messages.
-- Disable session replay and third-party analytics that capture text fields.
-- Keep user-submitted tip text in browser memory for the active flow only; clear it when the user resets or leaves the analysis.
-- The LLM provider integration must be server-side, with its data-retention and training settings reviewed before use. If acceptable terms cannot be verified, disable cloud parsing and rely on structured lookup.
+- Do not persist uploaded tip photos, uploaded videos, pasted tips, Pause & Plan responses, or end-user identifiers.
+- Redact user input and uploaded file metadata from application logs, error traces, analytics, and provider error messages.
+- Disable session replay and third-party analytics that capture text fields or media uploads.
+- Keep user-submitted photos/videos (object URLs) and tip text in browser memory for the active flow only; revoke object URLs and clear them when the user resets or leaves the analysis.
+- The OCR/ASR/LLM extraction provider integration must be server-side, with its data-retention and training settings reviewed before use. If acceptable terms cannot be verified, disable cloud parsing/media extraction and rely on user-entered influencer + stock lookup.
 - The optional research experiment must use informed consent and a study data plan. Do not silently reuse product telemetry as research data.
 
 ### 7.3 Application security
 
 - Enforce HTTPS in hosted environments.
-- Keep database URLs, LLM keys, Sarvam keys, and deployment tokens in provider-managed secrets; never expose them to Vite client variables.
+- Keep Supabase service-role keys, database URLs, LLM keys, Sarvam keys, and deployment tokens in provider-managed server-side secrets; never expose them to Vite client variables (`VITE_*`).
 - Restrict CORS to the deployed frontend origins and local development origin.
-- Validate all API inputs with Pydantic; cap text length and request size; reject malformed dates, tickers, and unexpected fields.
-- Use SQLAlchemy parameterized queries; never build raw SQL from user text.
-- Rate-limit parser requests and apply bounded timeouts to LLM and voice providers.
+- Validate all API inputs with Zod and validate multipart uploads (via Multer `memoryStorage()`) by MIME type, magic bytes, file size limit, and video duration limit; cap text length and request size; reject malformed dates, tickers, and unexpected fields.
+- Never trust uploaded filenames for SEBI registration status or security resolution; strip/ignore image EXIF and video metadata and purge ephemeral media buffers immediately after processing.
+- Use parameterized SQL queries (`pg` placeholders or `@supabase/supabase-js` query builder); never concatenate raw SQL from user text.
+- Rate-limit parser/media-intake requests and apply bounded timeouts to OCR, ASR, LLM, and voice providers.
 - Treat source URLs and user-provided strings as untrusted. Render text escaped; allow only `http`/`https` links and do not fetch arbitrary submitted URLs server-side.
 - Add dependency scanning, secret scanning, and a production environment review before launch.
 - Do not expose internal prompts, environment settings, ingestion paths, or stack traces in public routes.
 
 ## 8. Frontend State Management
 
-- **Server state:** TanStack Query for stocks, SEBI lookup, chart series, tip markers, checks, and report responses. Query keys must include ticker, creator, date range, and snapshot/as-of parameters to prevent mixing dates.
-- **Transient workflow state:** React Context + `useReducer` for pasted text, selected creator/ticker, Claim Ledger corrections, current wizard step, selected chart marker, and Pause & Plan answers.
-- **Persistence:** No localStorage, IndexedDB, or cookies for pasted tip text or personal answers. Avoid persisting sensitive workflow state across browser restarts.
-- **Reset behavior:** A clear/reset action must clear transient text, parser output, selected evidence context, chart selection, and Pause & Plan answers.
-- **Error states:** Distinguish network failure, provider/parser unavailable, snapshot missing, stale snapshot, ambiguous identity, and partial evidence. Do not turn any of these into a positive or negative risk status.
+- **Server state:** TanStack Query for stocks, SEBI lookup, chart series, tip markers, checks, demo media catalog, and report responses. Query keys must include ticker, creator, date range, and snapshot/as-of parameters to prevent mixing dates.
+- **Transient workflow state:** React Context + `useReducer` for uploaded photo/video file handle & preview URL, pasted/extracted text, user-entered influencer name and stock/instrument name, Claim Ledger corrections, current wizard step, selected chart marker, and Pause & Plan answers.
+- **Persistence:** No localStorage, IndexedDB, or cookies for uploaded media, pasted tip text, or personal answers. Avoid persisting sensitive workflow state across browser restarts.
+- **Reset behavior:** A clear/reset action must revoke any media object URLs and clear transient files, text, parser output, influencer/stock inputs, selected evidence context, chart selection, and Pause & Plan answers.
+- **Error states:** Distinguish network failure, provider/parser/media-extraction unavailable, unsupported/oversized file, snapshot missing, stale snapshot, ambiguous identity, and partial evidence. Do not turn any of these into a positive or negative risk status.
 
 ## 9. Data Ingestion and Provenance
 
@@ -485,16 +502,16 @@ The ingestion pipeline must:
 - NSE/BSE: public historical prices, volume, market cap, circuit bands, and surveillance lists, subject to source access and terms.
 - SEBI: dated public register snapshot.
 - Enforcement orders: public cases used for threshold calibration; the small sample size must be disclosed.
-- Tip corpus: hand-collected public posts where permitted and team-authored Hinglish examples. Mark each row as Real or Synthetic and retain source links where possible.
+- Tip corpus: hand-collected public posts where permitted, the curated Hinglish influencer media corpus (`photos/` and `videos/`), and team-authored Hinglish examples. Mark each row as Real, Mixed, or Synthetic and retain source links where possible.
 - Never scrape social platforms in the live app. Do not present synthetic demo data as actual market history.
 
 ## 10. Testing Strategy
 
 ### 10.1 Backend
 
-- Unit-test formulas and edge cases for each of the five checks.
+- Unit-test formulas and edge cases for each of the five checks, including `COULD_NOT_VERIFY` for derivative/index-option contracts when equity-only snapshots do not apply.
 - Unit-test Beta-Binomial calculations, ties, missing deadlines, invalid dates, benchmark alignment, and insufficient samples.
-- Test parser schema validation, source-span matching, ambiguous ticker handling, and provider timeout/failure fallback.
+- Test multimodal upload validation (MIME/magic bytes, file size, duration), transient buffer cleanup, parser schema validation, source-span matching, gated stop-loss detection (`SL PAID`), ambiguous ticker handling, and provider timeout/failure fallback.
 - Test the Output Guard with ordinary, edge, and adversarial prompts; target zero unsafe system-authored output.
 - Integration-test every API route against a temporary PostgreSQL database and immutable fixture snapshots.
 - Test snapshot ingestion idempotency, duplicate detection, malformed rows, and rollback behavior.
@@ -502,14 +519,15 @@ The ingestion pipeline must:
 ### 10.2 Frontend
 
 - Component-test `Not stated`, `Could not verify`, `Not found`, and `Not enough tips to judge` states.
+- Component-test photo upload, video upload, text paste, and influencer/stock inputs, including reset/cleanup of object URLs.
 - Test that selecting a chart marker shows only the exact-date tip set.
 - Test mobile navigation, responsive chart alternative, Pause & Plan completion gate, and reset behavior.
-- Confirm input text is not written to localStorage/IndexedDB and is absent from analytics/logging payloads.
+- Confirm uploaded media and input text are not written to localStorage/IndexedDB and are absent from analytics/logging payloads.
 
 ### 10.3 End-to-end and evaluation
 
-- Playwright flow: pasted tip → Claim Ledger → evidence → chart marker → facts card → Pause & Plan.
-- Playwright flow: structured lookup works when parser provider is disabled.
+- Playwright flow: photo/video/text tip + influencer & stock entry → Claim Ledger → evidence → chart marker → Information Verdict (facts card) → Pause & Plan.
+- Playwright flow: structured influencer + stock lookup completes even when media extraction and LLM parser providers are disabled.
 - Run the 3-arm experiment with at least 40 participants and approximately 20 historical tips; report objective metrics and limitations.
 - Calibrate checks against historical enforcement cases and normal stocks, reporting precision/recall and confidence intervals against a naive baseline.
 
@@ -517,32 +535,33 @@ The ingestion pipeline must:
 
 ### 11.1 Environments
 
-- **Local:** Vite frontend, local FastAPI service, Docker Compose PostgreSQL.
-- **Preview:** Netlify branch deploy plus Render preview/staging service and isolated staging database.
-- **Production:** Netlify frontend, Render FastAPI service, managed Render PostgreSQL.
+- **Local:** Vite frontend, local Node.js/Express service, Supabase PostgreSQL (staging/dev project or Supabase local dev).
+- **Preview:** Netlify branch deploy plus Render preview/staging Express service and isolated staging Supabase PostgreSQL project/branch.
+- **Production:** Netlify frontend, Render Node.js/Express service, managed Supabase PostgreSQL.
 
 Keep preview and production databases separate. Use distinct secrets for each environment.
 
 ### 11.2 Configuration
 
 Backend environment settings should include:
-- `APP_ENV`
-- `DATABASE_URL`
+- `APP_ENV` / `NODE_ENV`
+- `PORT`
+- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (and/or `DATABASE_URL` for direct PostgreSQL connection)
 - `FRONTEND_ORIGINS`
 - `LLM_PROVIDER` and the provider-specific server-side API key
 - `SARVAM_API_KEY` only when voice is enabled
 - Versioned check thresholds and methodology configuration
 - Rate-limit and timeout settings
 
-Frontend environment settings may include only public values such as `VITE_API_BASE_URL`. Never place private API keys in frontend variables.
+Frontend environment settings may include only public values such as `VITE_API_BASE_URL`. Never place private API keys or `SUPABASE_SERVICE_ROLE_KEY` in frontend variables.
 
 ### 11.3 Operational requirements
 
-- Health endpoint reports liveness and database readiness without leaking secrets.
+- Health endpoint reports liveness and Supabase database readiness without leaking secrets.
 - Structured logs include request IDs and operation names, not pasted text or personal data.
 - Record ingestion outcomes and snapshot validation status.
 - Monitor API errors, parser fallback rate, stale snapshot use, and Output Guard blocks.
-- Keep backups enabled for production PostgreSQL and test restoration before public release.
+- Keep backups enabled for production Supabase PostgreSQL and test restoration before public release.
 - Document how to roll back a deployment and how to disable the LLM/voice integration independently.
 - Use cached immutable snapshot reads for the chart and deterministic checks; never cache a response without including its snapshot/version in the cache key.
 
@@ -550,7 +569,7 @@ Frontend environment settings may include only public values such as `VITE_API_B
 
 These are explicit product/methodology decisions, not missing implementation work:
 
-1. Confirm the chosen deployment providers (Netlify + Render) and whether the production database should be Render PostgreSQL.
+1. Confirm the chosen deployment providers (Netlify frontend + Render Express backend + Supabase PostgreSQL database) and which Supabase project/branch to target for development/staging.
 2. Confirm the source-provider and usage terms for NSE/BSE historical data and the SEBI register snapshot.
 3. Approve market-cap band boundaries, N-session lookback, and calibrated thresholds after reviewing the calibration dataset.
 4. Approve the Beta prior, 95% interval, provisional 20-resolved-tip floor, and matched market-baseline construction.

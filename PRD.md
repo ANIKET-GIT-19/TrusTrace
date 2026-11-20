@@ -13,9 +13,9 @@ Tip Autopsy is a mobile-first web application for first-time Indian retail inves
 
 The product is an evidence-literacy tool, not an investment decision engine. It must never tell a person to buy, sell, hold, avoid, or target a security. It must not assign an overall trust score to an influencer or a red/green verdict to a stock. Every result must be traceable to a source and an as-of date, and every dataset must be clearly identified as **Real**, **Synthetic**, or **Mixed**.
 
-Version 1 is a hackathon-ready, end-to-end prototype with a production-minded architecture. It supports both pasted Hinglish tip text and a structured influencer-plus-stock lookup. A deterministic evidence engine performs market and lateness checks from preloaded snapshots. A bounded language model is used only to convert unstructured Hinglish into a structured Claim Ledger; it is not permitted to generate the report narrative. All facts-card sentences are assembled from verified values and approved templates, then checked by an Output Guard.
+Version 1 is a hackathon-ready, end-to-end prototype with a production-minded architecture. When a user enters the site, they can submit **any photo (e.g., Telegram/WhatsApp screenshot), video (e.g., Hinglish finfluencer Reel/YouTube clip), or pasted Hinglish/English text**, along with the **influencer name** and **stock or instrument name**. A bounded multimodal extraction layer converts submitted photo, video, or text content into a structured Claim Ledger, while a deterministic evidence engine looks up the stock/instrument, checks a dated SEBI register snapshot, and computes market and lateness checks from preloaded snapshots. All facts-card sentences ("Information Verdict") are assembled from verified values and approved templates, then checked by an Output Guard.
 
-The application has no end-user login and stores no personal user data in Version 1. Pasted tip text is processed transiently and is not retained as an application record.
+The application has no end-user login and stores no personal user data in Version 1. Uploaded photos, videos, and pasted tip text are processed transiently and are never retained as an application record.
 
 ## 2. Product Context and Problem
 
@@ -49,13 +49,13 @@ Tip Autopsy changes the unit of analysis from *who should I trust?* to *what evi
 
 ## 3. Product Principles and Non-Negotiable Guardrails
 
-1. **Evidence, not advice.** The product describes historical facts and risk factors around a tip. It does not recommend an investment action.
-2. **No overall trust score.** Do not collapse the checks into a single creator rating, stock score, confidence meter, or red/green verdict.
+1. **Evidence, not advice (Information Verdict only).** The product describes historical facts and risk factors around a tip. Any "verdict" shown by Tip Autopsy is strictly an **Information & Evidence Verdict** (grading completeness, disclosure, registration snapshot match, and market context)—never an investment action (`buy`, `sell`, `hold`, `avoid`, or `target`).
+2. **No overall trust score.** Do not collapse the checks into a single creator rating, stock score, confidence meter, or red/green stock verdict.
 3. **Unknown is a valid result.** Missing or stale data produces `Could not verify`, `Unclear`, or `Not stated`; it never produces an inferred fact.
 4. **No dead-end on a missing SEBI match.** `Not found in SEBI register snapshot` is a neutral result. The rest of the autopsy continues.
-5. **Bounded AI.** AI may parse source text into a Claim Ledger only. Market checks, statistical calculations, source labels, and report sentences are deterministic.
+5. **Bounded AI & multimodal extraction.** AI/OCR/STT may extract text and parse claims from uploaded photos, videos, or pasted text into a Claim Ledger only. Market checks, statistical calculations, source labels, and report sentences are deterministic.
 6. **Provenance by default.** Show source, snapshot date, and Real/Synthetic status wherever a user sees evidence derived from a dataset.
-7. **Privacy by default.** No login, account, portfolio, personal profile, or persistent record of a user's pasted tip in Version 1.
+7. **Privacy by default.** No login, account, portfolio, personal profile, or persistent record of a user's uploaded photo/video or pasted tip in Version 1.
 8. **Neutral presentation.** Never use stock-level red/green treatment that could be interpreted as an action signal. Use color only for clearly defined evidence classifications such as disclosure transparency.
 9. **No social-platform scraping.** Use permitted public historical data and curated snapshots; do not scrape social platforms or rely on live social endpoints.
 
@@ -94,7 +94,7 @@ Tip Autopsy changes the unit of analysis from *who should I trust?* to *what evi
 - Trading, order placement, broker integration, portfolio management, or watchlists.
 - End-user accounts, login, saved history, or personal profile data.
 - Live scraping of Telegram, WhatsApp, Instagram, YouTube, or other social platforms.
-- Screenshot/OCR intake or WhatsApp share-to-app.
+- OS-level WhatsApp share-to-app integration.
 - Labelling any individual as a scammer or fraud.
 - Unlabelled synthetic datasets or synthetic values presented as real market evidence.
 - Free-form AI-generated narrative in the final facts card.
@@ -105,18 +105,18 @@ Tip Autopsy changes the unit of analysis from *who should I trust?* to *what evi
 
 | ID | Feature | Requirement | Acceptance outcome |
 |---|---|---|---|
-| FR-01 | Dual-mode input | Accept pasted Hinglish tip text or structured influencer + stock selection. | Both paths can reach the same evidence experience; structured lookup is a reliable fallback when parsing is unavailable. |
-| FR-02 | Claim Ledger | Extract stock, direction, target price, deadline, and stop-loss. Show `Not stated` for missing fields and link each extracted value to its source span. | No missing value is silently inferred; source highlighting is available for extracted fields. |
+| FR-01 | Multimodal & structured input | Accept any **photo** (screenshot), **video** (clip/Reel), or **pasted Hinglish/English tip text**, paired with user-entered (or confirmed) **influencer name** and **stock/instrument name**. Also provide one-click curated demo clips/photos from `photos/` and `videos/`. | Photo, video, text, and direct influencer + stock inputs all reach the same evidence workspace; deterministic lookup works even if media/text parsing is unavailable. |
+| FR-02 | Claim Ledger | Extract text/transcript (when photo or video is supplied) and parse stock/instrument, direction, target price, deadline, and stop-loss. Show `Not stated` for missing fields (and explicitly note paywalled stop-losses such as `SL PAID` / `SL. VIP PREMIUM` as not stated/gated) with source-span highlights. | No missing value is silently inferred; source highlighting is available for extracted fields. |
 | FR-03 | Hype Detector | Highlight urgency and pressure phrases such as “guaranteed”, “last chance”, “double money”, and “join my Telegram”. | The highlighted phrase is visible in the original source text and is not treated as proof of manipulation. |
 | FR-04 | Disclosure Grade | Classify sponsorship transparency as `Clear disclosure`, `Vague`, or `None`; benchmark against a plain `#ad` keyword baseline. | The grade includes the evidence and method; it is not represented as a legal compliance certification. |
-| FR-05 | SEBI snapshot lookup | Check creator identity against a dated public SEBI register snapshot. Return `Registered`, `Not found`, or `Unclear`. | `Not found` is neutral wording and never stops the autopsy. Name mismatches remain `Unclear` when identity cannot be established. |
-| FR-06 | Five deterministic checks | Calculate liquidity, market-cap band, volume spike, five-trading-day pre-tip run-up, and surveillance/circuit-band context. | Each check returns a neutral status, measured value, as-of date, explanation, and source; missing data returns `Could not verify`. |
+| FR-05 | SEBI snapshot lookup | Check the entered/extracted creator name (and known channel aliases in curated records) against a dated public SEBI register snapshot. Return `Registered`, `Not found`, or `Unclear`. | `Not found` is neutral wording and never stops the autopsy. Name mismatches remain `Unclear` when identity cannot be established. |
+| FR-06 | Five deterministic checks | Calculate liquidity, market-cap band, volume spike, five-trading-day pre-tip run-up, and surveillance/circuit-band context for supported equities. For index option contracts (e.g., `Sensex 82900 CE`, `Nifty 25500 CE`) or missing data, return `Could not verify` for inapplicable/missing checks. | Each check returns a neutral status, measured value, as-of date, explanation, and source; missing or derivative-inapplicable data returns `Could not verify`. |
 | FR-07 | Creator track record | Evaluate resolved historical tips against a Nifty 50 benchmark-adjusted outcome and use a Beta-Binomial credible interval. | Display a range and sample context; show `Not enough tips to judge` when evidence is insufficient or does not clear the baseline. |
 | FR-08 | Tip Time Machine | Show interactive stock price and volume history with markers for relevant tip dates. | Tapping a marker shows only tips for that influencer-stock pair on that date, including source link and Real/Synthetic label. |
-| FR-09 | Guarded facts card | Assemble all explanatory narrative from fixed templates and verified values; run the Output Guard before returning it. | Unsafe generated narrative is blocked and replaced by a safe fallback. Mandatory disclaimer is always present. |
+| FR-09 | Information Verdict (Guarded Facts Card) | Assemble the stock evidence summary and system's **Information Verdict** from fixed templates and verified values; run the Output Guard before returning it. | Unsafe generated narrative is blocked and replaced by a safe fallback. Mandatory disclaimer is always present; no buy/sell/hold advice is emitted. |
 | FR-10 | Pause & Plan | Before a user selects `I'd act on this`, ask the three pre-commitment questions. | The action path is gated until all three responses are completed; the app does not convert responses into advice. |
 | FR-11 | Evidence transparency | Show Real/Synthetic/Mixed labels and snapshot dates on every evidence view. | No synthetic data is visually indistinguishable from real data. |
-| FR-12 | Privacy | Process pasted text transiently; do not create end-user accounts or persist user-submitted tips. | No raw pasted text or personal user data is written to the application database or ordinary logs. |
+| FR-12 | Privacy | Process uploaded photos, videos, and pasted text transiently; do not create end-user accounts or persist user-submitted media or tips. | No user-uploaded photo/video, raw pasted text, or personal user data is written to disk persistence, the application database, or ordinary logs. |
 | FR-13 | Voice readout (optional) | Provide short Hindi, Kannada, or English voice summaries through Sarvam when configured. | Voice failure never blocks the text experience; voice reads only the already-guarded facts card. |
 
 ### 5.2 Required market checks
@@ -146,36 +146,37 @@ Thresholds must be calibrated against historical SEBI enforcement cases and a no
 
 ## 6. End-to-End User Flow
 
-### Step 1 — Input
+### Step 1 — Input (Photo, Video, or Text + Influencer & Stock)
 
-The user either:
-- Pastes a Telegram/Reel/YouTube tip or transcript in Hinglish or English; or
-- Selects an influencer and stock through a structured lookup.
+When entering the website, the user:
+- Inputs **any photo** (e.g., Telegram/WhatsApp tip screenshot), **video** (e.g., Hinglish finfluencer Reel/YouTube clip), or **pasted tip text** in Hinglish or English (or selects a preloaded sample from the curated `photos/` and `videos/` showcase); and
+- Enters (or confirms/edits) the **influencer name** and **stock / instrument name**.
 
-The structured route must remain usable if the LLM provider is unavailable, slow, or returns invalid structured output.
+The deterministic influencer + stock lookup route must remain fully usable even if media extraction or LLM parsing is unavailable, slow, or returns invalid structured output.
 
 ### Step 2 — Claim Ledger and Language Audit
 
 The application displays:
-- Stock, direction, target price, deadline, and stop-loss.
-- `Not stated` for every missing field.
+- Extracted OCR text or video transcript (when a photo or video is supplied), kept visibly separate from system commentary.
+- Stock/instrument, direction, target price, deadline, and stop-loss.
+- `Not stated` for every missing field (and explicit flagging when a stop-loss is gated behind a paid group such as `SL PAID` or `SL. VIP PREMIUM`).
 - Source-span highlights for extracted claims.
 - Highlighted urgency and pressure phrases.
 - Disclosure Grade with supporting phrase(s) and a clear explanation of the method.
 
 The app must distinguish an exact quote from a system-authored explanation. The quote may contain advice language because it is the creator's original text; it must remain visibly quoted and must never be rewritten as the application's recommendation.
 
-### Step 3 — Identity and Market Evidence
+### Step 3 — Stock Context, Identity, and Market Evidence
 
-The application displays the SEBI snapshot match status without halting on `Not found` or `Unclear`, then computes the five deterministic checks for the relevant tip date and current available snapshot date. Each result includes the measured figure, status, source, as-of date, and plain-language meaning.
+The application resolves the entered **stock/instrument** and displays the **SEBI snapshot match status** for the entered **influencer name** without halting on `Not found` or `Unclear`, then computes the five deterministic checks for the relevant tip date and current available snapshot date. Each result includes the measured figure, status, source, as-of date, and plain-language meaning (returning `Could not verify` for uncovered derivative contracts or missing snapshots).
 
 The creator track record appears as a benchmark-adjusted credible interval, or `Not enough tips to judge`.
 
-### Step 4 — Tip Time Machine and Guarded Facts Card
+### Step 4 — Tip Time Machine and Information Verdict (Guarded Facts Card)
 
-The interactive chart displays historical close and volume, with tip-date markers and relevant pre-tip movement. Selecting a marker opens all matching tips for that exact creator-stock-date combination, with original text, source link, and Real/Synthetic badge.
+The interactive chart displays historical close and volume for the matched stock (or underlying index where applicable), with tip-date markers and relevant pre-tip movement. Selecting a marker opens all matching tips for that exact creator-stock-date combination, with original text, source link, and Real/Synthetic badge.
 
-The facts card summarizes only verified evidence. All system-authored sentences are assembled from approved templates, validated values, and provenance references, then passed through the Output Guard. A short Hindi, Kannada, or English voice readout may be offered when enabled.
+The **Information Verdict (Guarded Facts Card)** summarizes only verified evidence about the tip and stock context—never an investment action recommendation. All system-authored sentences are assembled from approved templates, validated values, and provenance references, then passed through the Output Guard. A short Hindi, Kannada, or English voice readout may be offered when enabled.
 
 ### Step 5 — Pause & Plan
 
@@ -217,20 +218,24 @@ The source specification requires a mobile-first responsive interface and neutra
 
 ### 8.1 Visual language
 
+> **Single Source of Truth:** Exact colors, Liquid Glass tokens, typography, iconography (`@phosphor-icons/react`, never Lucide or emoji icons), and component geometry are governed by `DESIGN.md` v2.0.
+
 - **Overall feel:** Calm, editorial, evidence-led, and approachable. Avoid trading-terminal density, casino-like motion, price-prediction styling, or gamified trust scores.
-- **Background:** Soft cool off-white (`#F6F8FA`) with white evidence cards.
-- **Primary text:** Deep navy (`#142B3B`) for strong contrast and visual hierarchy.
-- **Brand accent:** Muted teal (`#0F7774`) for navigation, links, chart focus, and primary neutral actions.
-- **Borders and secondary text:** Cool gray (`#D8E1E7`, `#5C6B75`).
-- **Needs attention:** Muted amber (`#A96500`) with an explicit text label and icon.
-- **Could not verify:** Slate gray; never hide uncertainty behind an empty state.
-- **Disclosure Grade:** `Clear disclosure` may use a restrained green/teal treatment, `Vague` amber, and `None` a neutral slate treatment. These colors describe disclosure evidence only, not investment merit.
+- **Background:** Warm ivory canvas (`#FAF8F4` / `#F3EFE7` shader fallback via verbatim `ui-ux/DashBoardBackground.jsx`) with translucent Liquid Glass and white (`#FFFFFF`) evidence cards.
+- **Primary text:** Rich charcoal (`#161A18`) for strong contrast and visual hierarchy.
+- **Brand accent:** Muted sage-forest (`#4A7C64` / `#1F4D3A`) for navigation, links, chart focus, and primary neutral indicators.
+- **Borders and secondary text:** Hairline charcoal (`rgba(22, 26, 24, 0.09)`) and muted sage-charcoal (`#4A524D`, `#6E7771`).
+- **Needs attention:** Warm amber/ochre (`#9A5B13` on `#FDF3E4`) with an explicit text label and icon.
+- **Could not verify / Unverified:** Neutral slate (`#4E5964` on `#EEF1F4`); never hide uncertainty behind an empty state.
+- **Disclosure Grade:** `Clear disclosure` uses calm sage-green (`#2A6F52` on `#E6F2EC`), `Vague` uses amber, and `None` uses neutral slate. These colors describe disclosure evidence only, not investment merit.
 - Do not use red/green treatments to classify a stock or tell a user what action to take.
 
 ### 8.2 Layout behavior
 
 - Design from a 360 px mobile viewport upward; support narrow devices without horizontal page scrolling.
-- Use a single-column flow on mobile and a readable two-column evidence layout on wide screens where appropriate.
+- Use the visual reference direction in `ui-ux/` (`ui-ux/hero.jpeg` for the hero section, `ui-ux/DashBoard.png` for the frosted-glass sidebar + overview/workspace dashboard shell, and `ui-ux/DashBoardBackground.jsx` for the animated dashboard gradient background), adapting any mock-only labels (`Past Reports`, `Confidence Score`, `Live Market Data`) to Tip Autopsy's strict zero-persistence, non-advisory, dated-snapshot guardrails.
+- Use a single-column flow on mobile and a readable sidebar + multi-column evidence layout on wide screens where appropriate.
+- Include a Dashboard Overview band with dated `NIFTY 50`, `SENSEX`, and `BANKNIFTY` benchmark snapshot cards and a Curated Demo & In-Session Analyses table (zero saved history across sessions).
 - Keep the primary task visible: input first, evidence second, chart and facts card third, Pause & Plan last.
 - Use clear numbered progress steps and persistent back navigation so a user can inspect earlier evidence without losing their in-session analysis.
 - Place snapshot date and Real/Synthetic label directly beside the evidence they qualify, not only in a footer or settings page.
@@ -254,7 +259,20 @@ The source specification requires a mobile-first responsive interface and neutra
 | Prices, volume, market cap, circuit bands, ASM/GSM | NSE/BSE public historical data or an authorized source | `Real` plus source and snapshot date |
 | Registered intermediaries | SEBI public register | `Real` plus snapshot date |
 | Manipulation calibration cases | Public SEBI enforcement orders | `Real`; disclose that the calibration sample is limited and report uncertainty |
-| Hinglish tip ledger and coordinated-promotion examples | Hand-collected public posts and team-authored examples | `Mixed` or `Synthetic` on every relevant record |
+| Hinglish tip ledger, curated `photos/` & `videos/` corpus, and coordinated-promotion examples | Hand-collected public posts/screenshots/clips and team-authored examples | `Mixed` or `Synthetic` on every relevant record |
+
+### 9.1 Curated Hinglish Influencer Media Corpus (`photos/` & `videos/`)
+
+The repository includes curated Hinglish influencer tip media organized under `photos/` and `videos/` using the `<Influencer_Name>__<Stock_Name>__<Registration>` filename convention:
+
+- `photos/Ashish_Kyal__Sensex_82900_CE__Not_Registered.jpeg`
+- `photos/Chinmay_Dudhane__Nifty_25500_CE__Registered.jpeg`
+- `photos/Harsh_Bhagat__Nifty_25600_CE__Not_Registered.jpeg`
+- `videos/Rakesh_Bansal__Borosil_Renewables_Ltd__Registered.App.mp4`
+- `videos/Rakesh_Bansal__Sarveshwar_Foods__Registered.App.mp4`
+- `videos/Vivek_Rana__Wipro_Limited__Not_Registered.App.mp4`
+
+These curated assets seed the demo showcase and one-click sample inspection flow. Filename registration tags represent curated corpus metadata and must be reconciled with dated `sebi_register_entry` snapshots rather than trusted as live verification for arbitrary user-uploaded files.
 
 No synthetic value may be substituted for a missing real value without an explicit Synthetic label. A demo dataset must not be described as live market data. Source usage rights and retention limits must be checked before importing public posts or datasets.
 
@@ -262,9 +280,10 @@ No synthetic value may be substituted for a missing real value without an explic
 
 - **False positives on illiquid stocks:** Legitimate discussion of a thinly traded stock may trigger a liquidity warning.
 - **Large-cap blind spot:** Coordinated promotion of liquid large-cap stocks may not create an unusual volume signature.
-- **Hinglish edge cases:** Sarcasm, slang, transliteration, emoji-coded tickers, and mixed scripts can reduce extraction quality.
-- **Hidden sponsorships:** Paid promotions with no textual disclosure cues may be missed.
-- **SEBI name mismatch:** A social handle may differ from a legal name in the register; a missing match is not proof of non-registration.
+- **Hinglish and multimodal edge cases:** Sarcasm, slang, transliteration, emoji-coded tickers, low-resolution phone photos, and noisy video audio can reduce extraction quality.
+- **Derivatives vs. equity check scope:** Index option tips (e.g., `Sensex 82900 CE`, `Nifty 25500 CE`) do not map cleanly to equity market-cap or ASM/GSM watchlists and must yield `Could not verify` for inapplicable checks.
+- **Hidden sponsorships and gated stop-losses:** Paid promotions with no textual disclosure cues may be missed, and tips gating stop-losses behind paid tiers (`SL PAID`, `SL. VIP PREMIUM`) must be flagged as missing actionable risk limits.
+- **SEBI name mismatch:** A social handle or Telegram channel name (e.g., `Trading cafe India`) may differ from a legal name in the register; a missing or ambiguous match is not proof of non-registration.
 - **Small historical sample:** Credible intervals may remain wide or insufficient to judge.
 - **Data availability:** Public datasets may be incomplete, delayed, revised, or subject to access restrictions.
 - **Behavioral-study limits:** Students using hypothetical money are not identical to active investors, and friction effects may fade over time.
@@ -273,8 +292,8 @@ These limitations must be visible in methodology/help content and in the final e
 
 ## 11. Roadmap After the MVP
 
-1. Screenshot/OCR intake and WhatsApp share-to-app, after privacy, consent, and platform-policy review.
-2. Broader language coverage and more robust Hinglish parsing after evaluation on a hand-labelled corpus.
+1. OS-level WhatsApp share-to-app integration, after privacy, consent, and platform-policy review.
+2. Broader language coverage and more robust Hinglish multimodal (OCR/ASR) parsing after evaluation on a hand-labelled corpus.
 3. Additional exchange and data-provider integrations with explicit source provenance.
 4. More sophisticated coordinated-promotion signals, only when evidence and calibration support them.
 5. Voice readout in Hindi, Kannada, and English if not completed in the hackathon MVP.

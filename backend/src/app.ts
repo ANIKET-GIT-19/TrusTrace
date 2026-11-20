@@ -1,0 +1,77 @@
+import cors from "cors";
+import express, { type Express } from "express";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import { env as defaultEnv, type AppEnv } from "./core/env.js";
+import { buildErrorEnvelope, errorHandler, notFoundHandler } from "./core/errors.js";
+import { requestIdMiddleware } from "./api/middleware/requestId.js";
+import { createHealthRouter } from "./api/routes/health.js";
+import type { DatabaseProbeResult } from "./db/supabase.js";
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Request {
+      requestId?: string;
+    }
+  }
+}
+
+export interface CreateAppOptions {
+  config?: AppEnv;
+  probeDb?: (config: AppEnv) => Promise<DatabaseProbeResult>;
+}
+
+export function createApp(options: CreateAppOptions = {}): Express {
+  const config = options.config ?? defaultEnv;
+  const app = express();
+
+  app.disable("x-powered-by");
+  app.use(helmet());
+  app.use(
+    cors({
+      origin(origin, callback) {
+        // Allow server-to-server / curl requests without an Origin header and configured frontend origins
+        if (!origin || config.FRONTEND_ORIGINS.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(null, false);
+      },
+      methods: ["GET", "POST", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "X-Request-Id"],
+    })
+  );
+
+  app.use(requestIdMiddleware);
+  app.use(express.json({ limit: "256kb" }));
+
+  app.use(
+    "/api",
+    rateLimit({
+      windowMs: config.RATE_LIMIT_WINDOW_MS,
+      max: config.RATE_LIMIT_MAX_REQUESTS,
+      standardHeaders: true,
+      legacyHeaders: false,
+      handler(req, res) {
+        res
+          .status(429)
+          .json(
+            buildErrorEnvelope(
+              "RATE_LIMITED",
+              "Too many requests. Please pause briefly before trying again.",
+              req.requestId ?? "req_unknown",
+              true
+            )
+          );
+      },
+    })
+  );
+
+  app.use("/api", createHealthRouter({ config, probeDb: options.probeDb }));
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
+}

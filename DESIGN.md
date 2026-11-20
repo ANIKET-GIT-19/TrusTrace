@@ -30,11 +30,12 @@ Tip Autopsy is engineered as a calm, high-craft financial intelligence interface
 * **Mandatory Disclaimer Posture:** Informative, neutral, matter-of-fact, and non-advisory. Never sensationalist, punitive, or predictive.
 
 ### Neutral Evidence Vocabulary (Mandatory)
-All UI states, badges, and cards must use neutral evidence language rather than verdicts or accusations:
+All UI states, badges, and cards must use neutral evidence language rather than investment verdicts or accusations:
+* **Information Verdict (Facts Card):** Non-advisory evidence summary grading information completeness, disclosure, SEBI snapshot status, and historical market context—never a stock action recommendation
 * **SEBI Register Status:** `Registered` · `Not found in SEBI register` · `Unclear`
 * **Market & Lateness Checks:** `Within normal range` · `Needs attention` · `Could not verify`
 * **Creator Track Record:** Credible range (e.g., `30% to 60%` vs. Nifty 50) or `Not enough tips to judge`
-* **Claim Extraction:** Extracted value with highlighted source reference, or `Not stated`
+* **Claim Extraction:** Extracted value with highlighted source reference, or `Not stated` (with gated/paywalled note when a tip states `SL PAID` or `SL. VIP PREMIUM`)
 * **Disclosure Grade:** `Clear disclosure` · `Vague` · `None`
 * **Data Provenance:** `Real` · `Synthetic / Demo` · `Mixed (Labelled)`
 
@@ -56,12 +57,13 @@ The color palette translates a warm ivory editorial canvas and subtle sage-mint 
 
 | Token Name | HEX | RGBA / Usage | Role |
 | :--- | :--- | :--- | :--- |
-| `--bg-canvas-primary` | `#FAF8F4` | Warm ivory / off-white | Primary page and workspace background |
+| `--bg-canvas-primary` | `#FAF8F4` | Warm ivory / off-white | Primary page and workspace background (pairs with `DashBoardBackground.jsx` fallback `#F3EFE7` / `rgb(243, 239, 231)`) |
 | `--bg-canvas-secondary` | `#F3F0EA` | Very light warm grey | Secondary sections, subtle alternating rows, inset wells |
 | `--bg-surface-elevated` | `#FFFFFF` | Pure crisp white | High-contrast cards, chart containers, active inputs |
 | `--bg-ambient-sage` | `#E6EFEA` | Soft muted sage wash | Ambient radial/linear gradient glow in hero & header |
 | `--bg-ambient-mint` | `#DCECE4` | Delicate mint wash | Secondary soft atmospheric gradient accent |
 | `--bg-well-muted` | `#EFECE6` | Warm stone tint | Recessed containers, empty state wells, code/ledger chips |
+| `--bg-dashboard-shader` | `ui-ux/DashBoardBackground.jsx` | Wayglim WebGL2 animated halo/grain shader (`rgb(243, 239, 231)` base) | Full-bleed animated gradient canvas behind the frosted glass dashboard shell |
 
 ### 3.2 Text Hierarchy Tokens
 
@@ -155,13 +157,20 @@ font-variant-numeric: tabular-nums lining-nums;
 * **Dashboard Workspace Container:** `1360px` max-width with `24px` horizontal gutter on desktop (`≥1280px`), `20px` on tablet (`768px–1279px`), and `16px` on mobile (`<768px`).
 
 ### 5.2 Grid Rules
-* **Hero Composition Grid:** Single vertical stack flow—Floating Pill Header (`top: 20px`) → Centered Hero Copy Block → Full-bleed Animated Stock Chart wave band → 5-column Finfluencer Media Strip (`grid-template-columns: repeat(5, minmax(0, 1fr))` with `14px` gap on desktop; horizontal scroll track on mobile/tablet).
-* **Analysis Dashboard Grid:**
-  * Desktop (`≥1200px`): Fixed/sticky left navigation rail (`240px` width) + fluid main workspace (`1fr`) containing a `12-column` subgrid (`gap: 20px`).
-  * Primary top row: Tip Input & Claim Ledger (`7 cols`) + Influencer Identity, SEBI Lookup & Disclosure Grade (`5 cols`).
-  * Middle row: Interactive Tip Time Machine Chart (`8 cols`) + Honest Creator Track Record (`4 cols`).
-  * Evidence row: Five Deterministic Market & Lateness Checks in a responsive `5-column` row on wide screens (`repeat(5, minmax(0, 1fr))`), wrapping to `2–3` columns on medium screens and `1` column on mobile.
-  * Bottom row: Pause & Plan Pre-Commitment Gate + Methodology & Provenance Bar (`12 cols`).
+* **Visual Reference Assets (`ui-ux/`):**
+  * `ui-ux/hero.jpeg` — Primary hero visual reference (floating pill header, `"Think Before You Trust."`, animated stock curve, and lower finfluencer media strip).
+  * `ui-ux/DashBoard.png` — Primary dashboard layout inspiration (frosted glass app shell, left sidebar rail with bottom mission card, top command/search bar + provenance status pill, 3-card Market Overview strip, and bottom analysis table) adapted to Tip Autopsy's strict non-advisory and zero-persistence guardrails.
+  * `ui-ux/DashBoardBackground.jsx` — Animated WebGL2 gradient background component mounted behind the dashboard shell.
+* **Hero Composition Grid:** Single vertical stack flow—Floating Pill Header (`top: 20px`) → Centered Hero Copy Block → Full-bleed Animated Stock Chart wave band → Curated Hinglish Finfluencer Media Strip (`grid-template-columns: repeat(6, minmax(0, 1fr))` or responsive 3-column/6-card row with `14px` gap on desktop; horizontal scroll track on mobile/tablet).
+* **Dashboard Shell & Analysis Grid (adapted from `ui-ux/DashBoard.png`):**
+  * **Background Layer:** `<DashBoardBackground />` (`ui-ux/DashBoardBackground.jsx`, copied verbatim) inside a `relative isolate overflow-hidden` root wrapper; the frosted glass dashboard window sits in `relative z-10` with `24px` outer radius (`1px` `--border-glass-highlight`, `--shadow-glass-lg`).
+  * **Desktop (`≥1200px`):** Fixed/sticky left glass sidebar rail (`220px–240px` width, brand mark, `Dashboard` / `New Analysis` / `Demo Corpus` / `How Checks Work` nav items, and bottom `"We grade the information, not the investment."` shield card) + fluid main workspace (`1fr`) containing a `12-column` subgrid (`gap: 20px`).
+  * **Dashboard Overview Top Band:** Rounded frosted command/intake bar (`Photo / Video / Text + Influencer & Stock` + `Analyze` dark pill CTA) paired with a right-side dated provenance badge (`Dated Market Snapshots · NSE / BSE`, never `"Live Market Data"`), followed by a 3-column **Market Overview** benchmark strip (`NIFTY 50`, `SENSEX`, `BANKNIFTY` with `as-of` snapshot date, index level, change, and sparkline) and the **Curated Demo & In-Session Analyses** table (replacing any `"Past Reports"` or `"Confidence Score"` columns with compliant SEBI status, neutral evidence status, and `Real`/`Curated Demo` provenance).
+  * **Active Analysis Workspace:**
+    * Primary top row: Multimodal Tip Input (Photo / Video / Text + Influencer & Stock) & Claim Ledger (`7 cols`) + Influencer Identity, SEBI Lookup & Disclosure Grade (`5 cols`).
+    * Middle row: Interactive Tip Time Machine Chart (`8 cols`) + Honest Creator Track Record (`4 cols`).
+    * Evidence row: Five Deterministic Market & Lateness Checks in a responsive `5-column` row on wide screens (`repeat(5, minmax(0, 1fr))`), wrapping to `2–3` columns on medium screens and `1` column on mobile.
+    * Bottom row: Information Verdict (Guarded Facts Card) + Pause & Plan Pre-Commitment Gate + Methodology & Provenance Bar (`12 cols`).
 
 ---
 
@@ -198,7 +207,7 @@ Liquid Glass in Tip Autopsy evokes refined optical clarity—like light passing 
 1. **Surface Layering Ceiling:** Never nest more than **two** blurred glass layers (`backdrop-filter`) on top of each other. Inner sub-panels should use solid or high-opacity `#FFFFFF` / `#F3F0EA` wells with a `1px` `--border-hairline` border.
 2. **Specular Top Highlight:** Glass cards and navigation pills include a subtle inner top edge (`box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85)`) paired with `--border-hairline` around the perimeter.
 3. **Readability First:** Always pair translucent glass backgrounds (`0.68–0.74` alpha) with high-contrast text (`#161A18` or `#4A524D`). Never place low-contrast grey text over a moving chart or GIF without an opaque/high-opacity scrim or pill backing.
-4. **Ambient Gradients:** Soft radial gradients in `--bg-ambient-sage` (`#E6EFEA`) and `--bg-ambient-mint` (`#DCECE4`) sit subtly in the upper-left, upper-right, and chart backdrop of `--bg-canvas-primary` (`#FAF8F4`).
+4. **Ambient Gradients & Dashboard Background:** Soft radial gradients in `--bg-ambient-sage` (`#E6EFEA`) and `--bg-ambient-mint` (`#DCECE4`) sit subtly in the hero backdrop of `--bg-canvas-primary` (`#FAF8F4`). On the Dashboard workspace, mount `ui-ux/DashBoardBackground.jsx` verbatim (`<DashBoardBackground />`) inside a `relative isolate overflow-hidden` container behind the `relative z-10` frosted glass shell; keep its built-in `pauseOffscreen: true`, `respectReducedMotion: true`, and `rgb(243, 239, 231)` WebGL2 fallback intact. Never modify or refactor the Wayglim/Paper Shaders engine code inside `DashBoardBackground.jsx`.
 
 ---
 
@@ -226,7 +235,7 @@ The hero section is the flagship first impression and follows a clean, airy edit
    * **Supporting Copy (`18px` desktop / `16px` mobile):** Concise two-line explanation of how Tip Autopsy checks SEBI registration, pre-tip price/volume signals, Hinglish hype, and benchmark-adjusted track records—giving evidence, never buy/sell advice.
    * **Action Row:** Primary dark pill CTA `"Analyze a Tip"` (`#161A18`) paired with secondary glass pill CTA `"See How It Works"` (with a subtle play/guide indicator).
 3. **Animated Stock Chart Band:** Runs seamlessly across the full width behind and below the hero CTAs, blending into the canvas without a heavy boxed border, accompanied by a subtle corner provenance note (`Illustrative demo market curve · Real NSE/BSE data in analyzer`).
-4. **Five-Card Finfluencer Strip:** Positioned directly beneath the animated stock line across the lower hero band, followed by a subtle caption noting that these clips are `Synthetic Demo Content` illustrating common social-media tip hooks.
+4. **Curated Hinglish Finfluencer Media Strip:** Positioned directly beneath the animated stock line across the lower hero band, showcasing the curated Hinglish influencer photos and videos from `photos/` and `videos/` (each showing influencer name, stock/instrument, and click-to-analyze prefill), followed by a subtle caption noting their `Curated Demo / Mixed` provenance.
 
 ---
 
@@ -242,51 +251,62 @@ The hero section is the flagship first impression and follows a clean, airy edit
 
 ---
 
-## 11. Finfluencer GIF Carousel
+## 11. Curated Hinglish Finfluencer Media Strip
 
-Immediately beneath the animated stock line, display **five independent finfluencer media cards** (`aspect-ratio: 4 / 5` or `3 / 4`, border radius `18px`, subtle `1px` translucent border `rgba(255, 255, 255, 0.75)` and `--shadow-glass-sm`).
+Immediately beneath the animated stock line, display the **curated Hinglish finfluencer media cards** sourced from `photos/` and `videos/` (`aspect-ratio: 4 / 5` or `3 / 4`, border radius `18px`, subtle `1px` translucent border `rgba(255, 255, 255, 0.75)` and `--shadow-glass-sm`). Selecting any card prefills the analyzer with that media asset, influencer name, and stock/instrument name.
 
-### Exact Five Card Concepts
-1. `"10x multibagger! 👀"`
-2. `"This stock will 2x soon! 🔥"`
-3. `"Buy now? 😳"`
-4. `"Big opportunity! 🚀"`
-5. `"Don't miss out! 📈"`
+### Curated Corpus Assets (`<Influencer>__<Stock>__<Registration>`)
+1. `photos/Ashish_Kyal__Sensex_82900_CE__Not_Registered.jpeg` — Ashish Kyal · Sensex 82900 CE (Telegram screenshot, `SL PAID`)
+2. `photos/Chinmay_Dudhane__Nifty_25500_CE__Registered.jpeg` — Chinmay Dudhane (Trading cafe India) · Nifty 25500 CE (Telegram screenshot, `SL- Paid`)
+3. `photos/Harsh_Bhagat__Nifty_25600_CE__Not_Registered.jpeg` — Harsh Bhagat · Nifty 25600 CE (Telegram screenshot, `SL. VIP PREMIUM` + account handling offer)
+4. `videos/Rakesh_Bansal__Borosil_Renewables_Ltd__Registered.App.mp4` — Rakesh Bansal · Borosil Renewables Ltd (Muted looping video clip)
+5. `videos/Rakesh_Bansal__Sarveshwar_Foods__Registered.App.mp4` — Rakesh Bansal · Sarveshwar Foods (Muted looping video clip)
+6. `videos/Vivek_Rana__Wipro_Limited__Not_Registered.App.mp4` — Vivek Rana · Wipro Limited (Muted looping video clip)
 
 ### Visual & Interaction Rules
-* **Media Assets:** Each card uses an actual looping GIF or muted autoplaying MP4/WebM clip depicting realistic Indian finfluencer expressions and hand gestures—never a static image placeholder.
-* **Caption Overlay:** Positioned near the bottom (`bottom: 14px`, `left: 12px`, `right: 12px`) inside a crisp glass/frosted pill or subtle dark-scrimmed caption bar (`rgba(22, 26, 24, 0.76)` with `backdrop-filter: blur(8px)`, `#FFFFFF` text, `13px` SemiBold, `10px` radius) so the caption remains legible over any video frame.
-* **Provenance Tag:** A small `Synthetic Demo` tag appears in the strip header/caption area so judges and users immediately recognize the clips as demo media.
+* **Media Assets:** Video cards render muted autoplaying/looping `.mp4` clips from `videos/` (`playsInline`, `muted`, `loop`) and screenshot cards render crisp `.jpeg` previews from `photos/`—never generic placeholder boxes.
+* **Caption Overlay:** Positioned near the bottom (`bottom: 14px`, `left: 12px`, `right: 12px`) inside a crisp glass/frosted pill or subtle dark-scrimmed caption bar (`rgba(22, 26, 24, 0.76)` with `backdrop-filter: blur(8px)`, `#FFFFFF` text, `13px` SemiBold, `10px` radius) displaying the **Influencer Name** and **Stock / Instrument Name** clearly over any frame.
+* **Provenance & Neutrality Rule:** Display a `Curated Demo` provenance tag in the strip header/caption area. Never render a red/green stock buy/sell indicator on these cards; SEBI snapshot status is presented neutrally inside the analyzer rather than as a stock verdict.
 * **Layout Behavior:**
-  * **Desktop (`≥1024px`):** All 5 cards side by side in a 5-column row (`gap: 14px`); hovering gently lifts the card (`translateY(-4px)`) and subtly brightens the border (`200ms ease-out`).
+  * **Desktop (`≥1024px`):** Responsive 6-column row (or 3×2 grid on medium-desktop widths, `gap: 14px`); hovering gently lifts the card (`translateY(-4px)`) and subtly brightens the border (`200ms ease-out`).
   * **Tablet & Mobile (`<1024px`):** Smooth horizontal swipe/scroll carousel (`scroll-snap-type: x mandatory`, `gap: 12px`) with peeked next card so mobile users can browse effortlessly.
 
 ---
 
 ## 12. Dashboard
 
-The **Tip Autopsy Analysis Workspace** maintains the warm ivory and Liquid Glass aesthetic while organizing evidence into clear, modular panels.
+The **Tip Autopsy Analysis Workspace** follows the frosted glass shell structure of `ui-ux/DashBoard.png` layered over the animated WebGL2 gradient in `ui-ux/DashBoardBackground.jsx` (`relative isolate overflow-hidden` outer wrapper with `relative z-10` frosted glass container), while enforcing all Tip Autopsy safety and zero-persistence rules.
+
+### Guardrail Adaptations vs. `ui-ux/DashBoard.png` Concept Mock
+* **No persisted `"Past Reports"`:** Because Version 1 stores zero user data or analysis history, replace `"Past Reports"` with **`Demo Corpus`** (curated `photos/` & `videos/` cases) plus transient in-session analyses cleared on reset/reload.
+* **No `"Confidence Score (%)"` or `"High / Moderate / Low Risk"` stock labels:** In the overview table, replace percentage confidence scores and risk-level pills with neutral evidence columns: **`Tip / Stock & Instrument`**, **`Creator & Media`**, **`SEBI Snapshot`**, **`Information Verdict / Key Findings`** (`Needs attention`, `Within normal range`, `Could not verify`), and **`Snapshot Date / Provenance`**.
+* **No `"Live Market Data"` misrepresentation:** Label the top-right status pill **`Dated Market Snapshots · NSE / BSE`** with explicit `as-of` dates.
 
 ### Required Dashboard Modules
-1. **Minimal Navigation Rail / Header:** Quick switch between `Tip Analyzer`, `How Checks Work`, and `Experiment & Limits`, plus a clear `"No login · No personal data"` privacy note and `Real vs. Synthetic` legend.
-2. **Tip Input Panel (Dual Mode):**
-   * **Paste-Tip Mode:** Multi-line textarea for pasting a Hinglish Reel transcript or Telegram/WhatsApp message, with quick sample tip chips (`Synthetic Demo`) for instant one-click testing.
-   * **Structured Lookup Mode:** Clean fields for Influencer (name, handle, or SEBI registration number) and Stock ticker/company.
-3. **Influencer Identity & Disclosure Card:**
+1. **Frosted Sidebar Rail & Header:** Left rail inside the glass shell with brand mark, navigation (`Dashboard`, `New Analysis`, `Demo Corpus`, `How Checks Work`), `"No login · No personal data"` privacy pill, `Real vs. Synthetic` legend, and the bottom shield callout: *"We grade the information, not the investment."*
+2. **Dashboard Overview (Benchmark Strip & Curated/Session Table):**
+   * **Top Intake Bar + Snapshot Status:** Quick multimodal/structured intake bar (`Analyze` pill CTA) beside the dated `NSE / BSE Snapshots` status pill.
+   * **3-Column Market Overview Strip:** Compact cards for `NIFTY 50`, `SENSEX`, and `BANKNIFTY` showing dated index close, session change, subtle sage sparkline, `as-of` date, and `Real` badge (falling back to `Could not verify` if a benchmark snapshot is missing).
+   * **Curated Demo & In-Session Analyses Table:** Lists the 6 preloaded `photos/` and `videos/` Hinglish cases (plus transient current-session runs) using compliant neutral evidence columns.
+3. **Tip Input Panel (Multimodal + Influencer & Stock):**
+   * **Media / Text Tabs + Dropzone:** Allows the user to upload **any Photo** (`.jpeg`, `.png`, `.webp`), upload **any Video** (`.mp4`, `.webm`, `.mov`), or paste **Hinglish/English Text**, with an in-memory transient preview and a clear `"Processed transiently · Not saved"` notice. Includes one-click sample chips/cards from `photos/` and `videos/`.
+   * **Influencer & Stock Fields:** Always displays clean, searchable inputs for **Influencer Name** (name, handle, or SEBI registration number) and **Stock / Instrument Name** (equities or index options), pre-populated or editable when extracted from media/text and functional even without media parsing.
+4. **Influencer Identity & Disclosure Card:**
    * Displays influencer name/handle, deterministic SEBI register snapshot lookup status (`Registered`, `Not found in SEBI register`, or `Unclear`) with snapshot `as-of` date, and **Sponsor Disclosure Grade** (`Clear disclosure`, `Vague`, or `None`).
    * Never stops the analysis solely because an influencer is not in the SEBI register; clearly notes that `"Not found"` does not mean `"fraud"`.
-4. **Structured Claim Ledger:**
+5. **Structured Claim Ledger:**
    * Displays extracted fields—`Stock`, `Direction`, `Target`, `Deadline`, `Stop-Loss`—linking each to its highlighted text span and rendering missing fields explicitly as `Not stated`.
    * Includes **Hinglish Hype Detection** highlighting pressure/urgency phrases in the pasted text.
-5. **Five Deterministic Market & Lateness Checks:**
+6. **Five Deterministic Market & Lateness Checks:**
    * Renders all five checks—`Liquidity`, `Market Cap`, `Volume Spike`, `Lateness / Pre-Tip Run-Up`, and `Surveillance & Circuit Band`—as of both the tip date and latest snapshot date.
    * Each card shows its neutral status (`Within normal range`, `Needs attention`, or `Could not verify`), exact measured metric + `as-of` date + `Real` badge, and plain-language explanation.
-6. **Creator Track Record Card:**
+7. **Creator Track Record Card:**
    * Displays Nifty-50 benchmark-adjusted performance as a **Beta-Binomial credible interval** (e.g., `30% to 60%`) or `Not enough tips to judge` when sample size is too small.
-7. **Interactive Tip Time Machine Chart:**
+8. **Interactive Tip Time Machine Chart:**
    * Interactive price and volume chart with timeframe selector, historical tip markers, pre-tip run-up / volume spike callouts, and `Real` data provenance label.
    * Tapping or clicking a tip marker opens the tips from that exact date (showing tip text, source link, and `Real` or `Synthetic` label).
-8. **Pause & Plan Behavioral Gate:**
+9. **Information Verdict (Guarded Facts Card) & Pause & Plan Behavioral Gate:**
+   * Summarizes the matched stock/instrument evidence and the system's guarded **Information Verdict** (grading completeness, disclosure, SEBI snapshot match, and market context—never a buy/sell verdict).
    * Interactive pre-commitment prompt before `"I'd act on this"` covering:
      1. *How much can I afford to lose?*
      2. *At what price do I exit?*
@@ -332,10 +352,11 @@ Every component follows consistent geometry, state transitions (`150ms–220ms`)
 * **Charts:** Clean gridlines (`rgba(22, 26, 24, 0.06)`), `12px` tabular axis labels (`#6E7771`), interactive hover crosshair + tooltip card, and large tap targets (`≥36px` interactive hit radius) on tip markers.
 * **Tables:** `14px` header (`#4A524D` SemiBold, uppercase `11px`–`12px` tracking), `14px` body cells (`#161A18` / `#4A524D` with `tabular-nums` for numbers/dates), `1px` row dividers (`--border-hairline`), horizontal scroll wrapper on small screens (`overflow-x: auto`).
 
-### 13.8 GIF / Media Cards, Loading, Empty, Error & Toast States
-* **GIF / Media Cards:** `18px` radius, overflow hidden, bottom caption overlay, `Synthetic Demo` label; smooth scale/lift on desktop hover.
+### 13.8 Media Upload Dropzone, Media Cards, Loading, Empty, Error & Toast States
+* **Media Upload Dropzone:** Dashed `1.5px` `--border-hairline` container (`16px` radius, `--glass-card-subtle`), accepting photos (`.jpeg`, `.png`, `.webp`) and short videos (`.mp4`, `.webm`, `.mov`) via drag-and-drop or file picker, showing an in-memory thumbnail/video preview, clear/remove button, and `"Transient only · never stored"` note.
+* **Media Cards:** `18px` radius, overflow hidden, bottom caption overlay, `Curated Demo` label; smooth scale/lift on desktop hover.
 * **Loading States:** Smooth shimmer skeleton blocks (`--bg-canvas-secondary` to `--bg-ambient-sage` gradient sweep, `1.4s` loop) matching exact card and chart dimensions—never generic spinning clutter.
-* **Empty States:** Centered glass card with a neutral Phosphor icon (`32px`, `#4A7C64`), concise explanation, and primary action button (e.g., `"Paste a tip or load a demo example"`).
+* **Empty States:** Centered glass card with a neutral Phosphor icon (`32px`, `#4A7C64`), concise explanation, and primary action button (e.g., `"Upload a photo/video, paste a tip, or pick a curated demo"`).
 * **Error States:** Clear, calm diagnostic message (`14px`–`15px`) explaining what failed or why data could not be verified (`Could not verify`), plus a retry action.
 * **Toast Notifications:** Bottom-right on desktop (`bottom: 24px`, `right: 24px`) or top/bottom inset on mobile; `14px` radius, `12px 16px` padding, `--glass-nav` + `--shadow-glass-md`, auto-dismissing after `4000ms` with a close button.
 
@@ -346,7 +367,7 @@ Every component follows consistent geometry, state transitions (`150ms–220ms`)
 ### Strict Icon Library Rule
 * **Primary Library:** Use **Phosphor Icons** (`@phosphor-icons/react`) across the entire frontend.
 * **Prohibited Library:** **Do not use `lucide-react` or Lucide icons anywhere in the codebase.**
-* **No Emoji UI Icons:** Do not use emoji (`📊`, `✅`, `⚠️`, `🔍`, `💬`) as interface icons, navigation items, or status markers. Emoji are permitted only inside the literal finfluencer demo captions (`"10x multibagger! 👀"`, `"This stock will 2x soon! 🔥"`, `"Buy now? 😳"`, `"Big opportunity! 🚀"`, `"Don't miss out! 📈"`) where they authentically represent social-media tip text.
+* **No Emoji UI Icons:** Do not use emoji (`📊`, `✅`, `⚠️`, `🔍`, `💬`) as interface icons, navigation items, or status markers. Emoji are permitted only inside literal quoted social-media tip text/captions when representing original creator posts.
 
 ### Icon Standards
 * **Sizes:** `14px` (inside compact badges), `16px` (inline controls, inputs, table headers), `20px` (navigation, card headers, buttons), `24px` (feature highlights), `32px` (empty states).
@@ -355,7 +376,7 @@ Every component follows consistent geometry, state transitions (`150ms–220ms`)
 
 ### Custom SVG & Media Assets
 * Use custom inline SVGs only for the Tip Autopsy brand emblem, the ambient animated hero stock chart, and compact sparklines/markers.
-* Use real looping GIF/video media files for the five finfluencer strip cards rather than static images or placeholder boxes.
+* Use curated `.jpeg` photo screenshots from `photos/` and muted looping `.mp4` video assets from `videos/` for the finfluencer media strip rather than generic placeholder boxes.
 
 ---
 
@@ -372,7 +393,7 @@ Motion is restrained, physical, and purposeful—reinforcing calm analytical cla
 
 ### Motion Specifications by Surface
 1. **Hero Stock Chart Animation:** Continuous smooth price wave motion (`8s` loop, `--ease-inout-smooth`) with subtle vertical price breathing so the hero feels alive without distracting from the headline.
-2. **Finfluencer GIF Strip:** Continuous smooth looping of the five demo GIF/video clips; horizontal carousel uses native CSS scroll snap (`scroll-behavior: smooth`).
+2. **Curated Finfluencer Media Strip:** Smooth looping of the curated `.mp4` clips alongside crisp `.jpeg` tip cards from `photos/` and `videos/`; horizontal carousel uses native CSS scroll snap (`scroll-behavior: smooth`).
 3. **Buttons & Glass Cards:** Hover elevates subtle shadow and shifts surface opacity within `150ms–220ms` (`--ease-out-apple`). Avoid spring bounce or scale overshoot (`>1.03x`).
 4. **Page & Section Transitions:** Subtle `12px` vertical translate + opacity fade (`280ms` `--ease-out-apple`) on view switch; scroll reveals trigger once (`viewport={{ once: true, amount: "some" }}`) with a gentle `16px` rise.
 5. **Dashboard Charts & Skeletons:** Tip Time Machine series animates cleanly on load/update (`500ms` `--ease-out-apple`); skeleton placeholders use a smooth horizontal gradient shimmer (`1400ms` infinite).
@@ -387,7 +408,7 @@ Tip Autopsy is designed intentionally for mobile retail investors (`375px–430p
 * **Hero Scaling:** `H1` scales fluidly from `38px` on mobile to `64px` on desktop; CTA buttons stack cleanly or sit side-by-side with `12px` gap and `44px+` height.
 * **Navigation:** Floating pill header stays compact (`52px` mobile / `56px` desktop); secondary links move into a clean glass drawer below `768px`.
 * **Stock Chart:** Scales fluidly across widths (`160px` height on mobile, `220px` on desktop) while keeping the price line crisp and unobstructed.
-* **Finfluencer Strip:** 5-column grid on desktop (`≥1024px`); horizontal scroll carousel on tablet and mobile (`<1024px`) with `12px` card gap and clear swipe affordance.
+* **Finfluencer Strip:** Responsive multi-column grid on desktop (`≥1024px`); horizontal scroll carousel on tablet and mobile (`<1024px`) with `12px` card gap and clear swipe affordance.
 * **Dashboard Navigation & Tables:** Left rail converts to a top horizontal strip or drawer on mobile/tablet; dense multi-column tables scroll horizontally inside a bordered container with `tabular-nums` alignment preserved.
 * **Chart Touch Targets:** Tip markers on the Tip Time Machine provide generous touch/tap hit areas (`≥36px–44px` tap target) so phone users can tap exact dates accurately.
 * **Mobile Glass Performance:** Mobile viewports use lighter blur radii (`blur(10px)`–`blur(12px)`) and slightly higher background opacity (`0.82–0.88`) to keep scrolling at a smooth `60fps` on mid-range Android and iOS devices.
@@ -428,6 +449,9 @@ AI coding agents and developers must **never** introduce any of the following an
 8. **Static Boxes Instead of Specified Animations:** Never replace the animated hero stock chart or looping finfluencer strip media with static mock boxes without approval.
 9. **Glass Overkill:** Never wrap every micro-element or data cell in heavy blur/shadow containers that reduce legibility or slow mobile rendering.
 
+10. **Copying Mockup Violations From `DashBoard.png`:** Never reproduce the concept mockup's `"Past Reports"` persistence label, `"Confidence Score (%)"` / `"High/Moderate/Low Risk"` trust-score pills, or `"Live Market Data"` label—always adapt them to `"Demo Corpus"` (in-session only), neutral evidence status pills, and `"Dated Market Snapshots · NSE / BSE"`.
+11. **Rewriting `DashBoardBackground.jsx`:** Never modify, minify, or refactor the exported Wayglim/Paper Shaders engine code inside `ui-ux/DashBoardBackground.jsx`; copy and import it verbatim.
+
 ---
 
 ## 20. AI Agent Implementation Rules
@@ -435,7 +459,7 @@ AI coding agents and developers must **never** introduce any of the following an
 Every AI coding agent (including Gemini, Antigravity, Cursor, and Claude Code) working on the Tip Autopsy frontend must strictly follow these rules:
 
 1. **Read `DESIGN.md` first:** Always read this file before creating or modifying any frontend UI component, page, or style token.
-2. **Follow design tokens exactly:** Use the exact HEX tokens, spacing values, radii, font sizes, and animation durations defined in `DESIGN.md`.
+2. **Follow design tokens exactly:** Use the exact HEX tokens, spacing values, radii, font sizes, and animation durations defined in `DESIGN.md` (paired with `ui-ux/hero.jpeg`, `ui-ux/DashBoard.png`, and `ui-ux/DashBoardBackground.jsx` as visual references).
 3. **Do not introduce new colors without updating `DESIGN.md`:** Do not invent ad-hoc HEX values or status colors outside the approved palette without updating this specification first.
 4. **Do not use Lucide icons:** Always use Phosphor Icons (`@phosphor-icons/react`) for UI iconography.
 5. **Do not replace specified animations with generic static placeholders:** Implement the animated hero stock chart and looping finfluencer media strip as specified.

@@ -1,0 +1,66 @@
+/* Tip Autopsy — Design Tokens (Single Source of Truth: DESIGN.md v2.0) */
+
+:root {
+  /* Core Surfaces & Backgrounds */
+  --bg-canvas-primary: #faf8f4;
+  --bg-canvas-secondary: #f3f0ea;
+  --bg-surface-elevated: #ffffff;
+  --bg-ambient-sage: #e6efea;
+  --bg-ambient-mint: #dcece4;
+  --bg-well-muted: #efece6;
+
+  /* Text Hierarchy */
+  --text-primary: #161a18;
+  --text-secondary: #4a524d;
+  --text-tertiary: #6e7771;
+  --text-on-dark: #faf8f4;
+  --text-on-accent: #123528;
+
+  /* Brand Accents & Buttons */
+  --accent-sage-primary: #4a7c64;
+  --accent-mint-secondary: #b8d8c8;
+  --accent-forest-deep: #1f4d3a;
+  --btn-primary-bg: #161a18;
+  --btn-primary-hover: #29302c;
+  --btn-primary-active: #0d100e;
+  --btn-secondary-bg: rgba(255, 255, 255, 0.72);
+  --btn-secondary-hover: rgba(255, 255, 255, 0.92);
+
+  /* Liquid Glass Surfaces, Borders & Shadows */
+  --glass-nav: rgba(255, 255, 255, 0.74);
+  --glass-card: rgba(255, 255, 255, 0.68);
+  --glass-card-subtle: rgba(250, 248, 244, 0.62);
+  --glass-overlay: rgba(22, 26, 24, 0.28);
+  --border-hairline: rgba(22, 26, 24, 0.09);
+  --border-glass-highlight: rgba(255, 255, 255, 0.85);
+  --border-accent-subtle: rgba(74, 124, 100, 0.28);
+  --shadow-glass-sm: 0 4px 16px -2px rgba(22, 26, 24, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --shadow-glass-md: 0 12px 32px -8px rgba(22, 26, 24, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --shadow-glass-lg: 0 24px 60px -12px rgba(22, 26, 24, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  /* Objective Evidence Status & Chart Colors */
+  --status-neutral-ok: #2a6f52;
+  --status-neutral-ok-bg: #e6f2ec;
+  --status-attention: #9a5b13;
+  --status-attention-bg: #fdf3e4;
+  --status-unverified: #4e5964;
+  --status-unverified-bg: #eef1f4;
+  --chart-line-primary: #3b8e6a;
+  --chart-candlestick-up: #63a98a;
+  --chart-candlestick-down: #a7b8b0;
+  --chart-marker-tip: #1f4d3a;
+  --chart-benchmark-ref: #6e7771;
+
+  /* Typography */
+  --font-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+
+  /* Motion */
+  --ease-out-apple: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-inout-smooth: cubic-bezier(0.45, 0, 0.55, 1);
+  --duration-fast: 150ms;
+  --duration-base: 240ms;
+  --duration-slow: 420ms;
+}

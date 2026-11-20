@@ -35,17 +35,18 @@ A checkbox is complete only after the user reviews and accepts the result. Do no
 
 - Never tell the user to buy, sell, hold, avoid, or target a stock.
 - Never provide a target price, valuation judgment, price prediction, or investment action recommendation in system-authored content.
-- Never create an overall trust score, influencer leaderboard, stock verdict, or red/green investment signal.
+- Never create an overall trust score, influencer leaderboard, stock action verdict, or red/green investment signal. Any "verdict" displayed in the UI must be strictly an **Information & Evidence Verdict (Guarded Facts Card)** describing the tip's completeness, disclosure, SEBI snapshot status, and historical market context.
 - The app may show a target price only as an explicitly quoted/extracted claim made by the original tip creator. Label it `Creator's claim`; never present it as an application conclusion.
 - Use objective, dated facts and neutral wording.
 
 ### 3.2 Deterministic evidence; bounded AI
 
-- AI is allowed only for parsing unstructured Hinglish/English text into the structured Claim Ledger.
+- AI (including bounded OCR/vision or audio transcription for user-submitted photos and videos) is allowed only for extracting and parsing unstructured Hinglish/English tip content into the structured Claim Ledger.
 - AI must not calculate market checks, decide risk status, resolve creator track records, determine SEBI registration, or generate facts-card narrative.
-- Validate every parser response against the backend schema and the original source spans.
-- Unsupported, absent, or ambiguous data must remain `Not stated`, `Unclear`, or `Could not verify`.
-- Structured influencer + stock lookup must continue to work when the LLM provider is unavailable.
+- Never infer SEBI registration or stock identity solely from an uploaded filename; resolve them deterministically against snapshots and user-confirmed inputs.
+- Validate every parser response against the backend schema and the original/extracted source spans.
+- Unsupported, absent, gated (e.g., `SL PAID` / `SL. VIP PREMIUM`), or ambiguous data must remain `Not stated`, `Unclear`, or `Could not verify`.
+- Structured influencer + stock lookup must continue to work when the media-extraction or LLM provider is unavailable.
 - Facts-card narrative must be built from reviewed templates and backend-verified values only.
 
 ### 3.3 Output Guard is mandatory
@@ -77,11 +78,11 @@ A checkbox is complete only after the user reviews and accepts the result. Do no
 ### 3.6 Privacy
 
 - Version 1 has no end-user login, accounts, profiles, portfolios, or saved analysis history.
-- Never persist pasted tip text, Pause & Plan answers, or personal user data.
-- Do not log request bodies that contain tip text. Redact user content from exception messages, traces, analytics, and provider errors.
-- Do not add session replay or analytics that capture form contents.
-- Do not store user text in localStorage or IndexedDB. Keep it in active client memory only and clear it on reset.
-- Do not add a database table for users or pasted tips without an explicit, separately reviewed product/privacy change.
+- Never persist user-uploaded photos or videos, pasted tip text, Pause & Plan answers, or personal user data.
+- Do not log request bodies or file payloads that contain tip media or text. Redact user content from exception messages, traces, analytics, and provider errors.
+- Do not add session replay or analytics that capture form contents or media uploads.
+- Do not store user text or media in localStorage or IndexedDB. Keep it in active client memory only (revoking object URLs) and clear it on reset.
+- Do not add a database table for users, uploaded media, or pasted tips without an explicit, separately reviewed product/privacy change.
 
 ## 4. Project Commands
 
@@ -90,10 +91,7 @@ The commands below are the intended interface after the corresponding Phase 1 se
 ### 4.1 Prerequisites
 
 - Node.js 22 or newer and npm.
-- Python 3.12 or newer.
-- `uv` for Python environment/dependency management.
-- Docker Desktop or Docker Engine with Docker Compose.
-- Access to the local PostgreSQL service.
+- Connected Supabase project (via Supabase MCP or `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` / `DATABASE_URL`).
 
 ### 4.2 First-time setup
 
@@ -104,16 +102,10 @@ npm ci
 
 # Backend dependencies
 cd ../backend
-uv sync
-
-# Start local PostgreSQL from the repository root
-cd ..
-docker compose up -d db
-
-# Apply database migrations
-cd backend
-uv run alembic upgrade head
+npm ci
 ```
+
+Apply database migrations in `supabase/migrations/` to the target Supabase project (via Supabase MCP or Supabase CLI).
 
 ### 4.3 Run the app locally
 
@@ -121,7 +113,7 @@ Start the backend in one terminal:
 
 ```bash
 cd backend
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+npm run dev
 ```
 
 Start the frontend in a second terminal:
@@ -131,7 +123,7 @@ cd frontend
 npm run dev
 ```
 
-The Vite development server should call the local API through the configured public API base URL. Never put backend secrets in Vite variables.
+The Vite development server should call the local API through the configured public API base URL (`VITE_API_BASE_URL`). Never put backend secrets or `SUPABASE_SERVICE_ROLE_KEY` in Vite variables.
 
 ### 4.4 Test and quality commands
 
@@ -150,19 +142,14 @@ Backend:
 
 ```bash
 cd backend
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy app
-uv run pytest
+npm run lint
+npm run typecheck
+npm run test -- --run
+npm run build
 ```
 
-Database migrations:
-
-```bash
-cd backend
-uv run alembic upgrade head
-uv run alembic current
-```
+Database migrations & security checks:
+- Manage SQL migrations under `supabase/migrations/` and verify RLS/advisors via Supabase MCP (`get_advisors`) or Supabase CLI.
 
 When an individual test fails, reproduce and fix the smallest relevant issue. Do not skip or delete a meaningful test just to make CI green.
 
@@ -174,17 +161,18 @@ When an individual test fails, reproduce and fix the smallest relevant issue. Do
 - Keep UI components small and focused. Put business calculations in the backend domain layer.
 - Use TanStack Query for API/server state and React Context + `useReducer` for transient multi-step workflow state.
 - Do not persist pasted text or Pause & Plan answers in browser storage.
-- Keep API response types aligned with backend Pydantic models. Do not duplicate or reinterpret financial formulas in the browser.
+- Keep API response types aligned with backend Zod schemas. Do not duplicate or reinterpret financial formulas in the browser.
 - Prefer semantic HTML, accessible names, visible focus states, keyboard interaction, and reduced-motion support.
 - Keep status text explicit; color alone must never carry the meaning.
 
-### 5.2 Python and FastAPI
+### 5.2 Node.js, Express, and TypeScript (Backend)
 
-- Use type annotations for public functions, Pydantic models for API boundaries, and small domain services for calculations.
-- Keep route handlers thin. Do not put market formulas, threshold decisions, Beta-Binomial logic, or template content directly in route modules.
-- Use SQLAlchemy parameterized expressions and explicit transactions.
-- Keep date and timezone handling explicit. Use `Decimal`-appropriate representations for persisted financial values.
-- Raise typed domain errors and map them to stable API error codes. Do not leak stack traces or database details.
+- Keep TypeScript strict across the backend; validate every API boundary, env config, and parser payload with Zod schemas.
+- Keep Express route handlers thin. Do not put market formulas, threshold decisions, Beta-Binomial logic, or template content directly in route modules.
+- Use parameterized SQL queries (`pg` placeholders or `@supabase/supabase-js` query builder) and explicit transactions where needed. Never interpolate untrusted strings into SQL.
+- Keep Multer uploads strictly in memory (`memoryStorage()`) with MIME/magic-byte and size/duration checks; discard buffers immediately and never write user media to disk or Supabase Storage.
+- Keep date and timezone handling explicit. Use `decimal.js` for financial arithmetic and `numeric` columns in Supabase PostgreSQL.
+- Raise typed domain errors and map them to stable API error codes via centralized Express error middleware. Do not leak stack traces or database details.
 - Keep threshold configuration and methodology versions explicit and testable.
 
 ### 5.3 Naming and structure

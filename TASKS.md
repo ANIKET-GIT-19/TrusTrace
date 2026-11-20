@@ -23,54 +23,54 @@ A checked box means the user has reviewed and accepted the task, not merely that
 
 ### 1.1 Confirm the project baseline
 
-- [ ] Review `PRD.md`, `ARCHITECTURE.md`, and this task plan together.
-  - [ ] Confirm the MVP boundaries and non-negotiable no-advice rules.
-  - [ ] Confirm React/TypeScript, FastAPI, PostgreSQL, Netlify, and Render as the initial stack.
-  - [ ] Confirm the zero-login and no-user-data-persistence model.
-  - [ ] Record decisions on data source access and initial methodology parameters.
-- [ ] Acceptance: the user approves the blueprint and the first implementation task before any application source code is written.
+- [x] Review `PRD.md`, `ARCHITECTURE.md`, and this task plan together.
+  - [x] Confirm the MVP boundaries and non-negotiable no-advice rules.
+  - [x] Confirm MERN-based stack (React/TypeScript, Node.js/Express/TypeScript), Supabase PostgreSQL, Netlify, and Render as the initial stack.
+  - [x] Confirm the zero-login and no-user-data-persistence model.
+  - [x] Record decisions on data source access, Supabase project target (`TrustTrace` / `vevrmjlokngcknkidmbc`), and initial methodology parameters.
+- [x] Acceptance: the user approves the blueprint and the first implementation task before any application source code is written.
 
 ### 1.2 Create the repository scaffold
 
-- [ ] Create the monorepo folders for `frontend/`, `backend/`, and `docs/`.
+- [ ] Create the monorepo folders for `frontend/`, `backend/`, `supabase/`, and `docs/`.
   - [ ] Add only the minimal package and project manifests needed for the selected stack.
-  - [ ] Pin Node.js and Python runtime versions and add dependency lockfiles.
-  - [ ] Add `.gitignore` rules for virtual environments, dependencies, build output, local databases, and secrets.
+  - [ ] Pin Node.js runtime versions and add dependency lockfiles.
+  - [ ] Add `.gitignore` rules for dependencies, build output, local databases, and secrets.
   - [ ] Add `.env.example` containing key names and safe example values only.
 - [ ] Acceptance: a clean clone can install dependencies without committing secrets or generated data.
 
 ### 1.3 Establish frontend foundation
 
 - [ ] Bootstrap React + TypeScript + Vite.
-  - [ ] Enable strict TypeScript checking.
-  - [ ] Configure Tailwind and the approved design tokens.
+  - [ ] Enable strict TypeScript checking (with JSX/declaration support to import `ui-ux/DashBoardBackground.jsx` verbatim).
+  - [ ] Configure Tailwind and the approved design tokens from `DESIGN.md`.
+  - [ ] Copy `ui-ux/DashBoardBackground.jsx` verbatim into `frontend/src/components/` without modifying its Wayglim/Paper Shaders engine.
   - [ ] Add routing and the responsive application shell.
   - [ ] Add lint, typecheck, and test scripts.
 - [ ] Acceptance: the frontend runs locally, renders an empty Tip Autopsy shell, and passes lint/typecheck/build.
 
 ### 1.4 Establish backend foundation
 
-- [ ] Bootstrap FastAPI and Python project tooling.
-  - [ ] Add Pydantic settings and environment-based configuration.
+- [ ] Bootstrap Node.js + Express + TypeScript project tooling.
+  - [ ] Add Zod-validated environment configuration.
   - [ ] Add a health endpoint and consistent API error envelope.
-  - [ ] Configure Ruff, mypy, pytest, and test settings.
+  - [ ] Configure ESLint, TypeScript (`tsc --noEmit`), Vitest, Supertest, and test settings.
   - [ ] Add request IDs and safe structured logging with input redaction.
 - [ ] Acceptance: the backend starts locally, `/api/health` responds, and baseline tests/lint/type checks pass.
 
-### 1.5 Establish local PostgreSQL and migrations
+### 1.5 Establish Supabase PostgreSQL and migrations
 
-- [ ] Add a local PostgreSQL service through Docker Compose.
-  - [ ] Configure SQLAlchemy database connectivity.
-  - [ ] Configure Alembic migrations.
-  - [ ] Add a first migration for the empty baseline schema.
-  - [ ] Verify a fresh database can be migrated from zero to head.
-- [ ] Acceptance: a new developer can start the database and apply migrations using documented commands.
+- [ ] Connect the target Supabase project (via Supabase MCP / environment config) and initialize `supabase/migrations/`.
+  - [ ] Configure server-side Supabase / PostgreSQL connectivity (`@supabase/supabase-js` service role and/or `pg`) with health check verification.
+  - [ ] Add a first baseline SQL migration and verify migration tracking.
+  - [ ] Run Supabase advisors (`get_advisors`) and verify RLS posture on `public` tables.
+- [ ] Acceptance: the Express backend connects to Supabase PostgreSQL, baseline migrations apply cleanly, and `/api/health` reports database readiness.
 
 ### 1.6 Add quality gates and CI
 
 - [ ] Configure CI for frontend and backend.
   - [ ] Run frontend lint, typecheck, unit tests, and production build.
-  - [ ] Run backend Ruff, mypy, and pytest.
+  - [ ] Run backend ESLint, TypeScript typecheck, Vitest tests, and build.
   - [ ] Add dependency and secret scanning where supported.
   - [ ] Fail the pipeline on test, lint, or type errors.
 - [ ] Acceptance: CI runs on pull requests and reports failures clearly.
@@ -81,24 +81,24 @@ A checked box means the user has reviewed and accepted the task, not merely that
   - [ ] Configure production build output and public API base URL.
   - [ ] Restrict deployment environment variables to public client values.
 - [ ] Connect backend preview deployment to Render.
-  - [ ] Configure start command, health check, and secret environment variables.
-  - [ ] Provision an isolated staging PostgreSQL database.
+  - [ ] Configure build/start commands, health check, and secret environment variables (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, etc.).
+  - [ ] Ensure staging/preview uses an isolated Supabase database/branch rather than production.
 - [ ] Acceptance: preview frontend can call the staging backend over HTTPS; production is not modified by this task.
 
 ### 1.8 Finalize data-source inventory and methodology plan
 
-- [ ] Document intended NSE/BSE, SEBI, enforcement-order, and tip-corpus inputs.
+- [ ] Document intended NSE/BSE, SEBI, enforcement-order, and curated tip/media corpus inputs (`photos/` and `videos/`).
   - [ ] Record source URL/provider, retrieval method, access date, usage terms, and expected fields.
-  - [ ] Confirm whether historical price, volume, market cap, circuit-band, and ASM/GSM snapshots are available.
-  - [ ] Define the hand-labelled Hinglish evaluation corpus plan.
+  - [ ] Confirm whether historical price, volume, market cap, circuit-band, and ASM/GSM snapshots are available for equities (`Borosil Renewables Ltd`, `Sarveshwar Foods`, `Wipro Limited`) and how index option tips (`Sensex 82900 CE`, `Nifty 25500 CE`, `Nifty 25600 CE`) are scoped.
+  - [ ] Define the hand-labelled Hinglish evaluation corpus plan alongside the `<Influencer>__<Stock>__<Registration>` curated media assets.
   - [ ] Define how synthetic records will be labelled and separated from real data.
 - [ ] Acceptance: no data source is treated as production-ready until access and usage terms are reviewed and its provenance metadata is defined.
 
 ### 1.9 Establish the visual foundation
 
-- [ ] Implement the responsive color, typography, spacing, and status-token system from `PRD.md`.
-  - [ ] Build accessible buttons, inputs, cards, badges, alerts, and progress indicators.
-  - [ ] Confirm there is no stock-level red/green verdict treatment.
+- [ ] Implement the responsive color, typography, spacing, and status-token system from `PRD.md` and `DESIGN.md`, aligned with `ui-ux/hero.jpeg` and `ui-ux/DashBoard.png` over the verbatim `DashBoardBackground.jsx` shader canvas.
+  - [ ] Build the frosted glass dashboard shell, left sidebar rail (`Dashboard`, `New Analysis`, `Demo Corpus`, `How Checks Work`, and `"We grade the information, not the investment."` callout), and accessible buttons, inputs, cards, badges, alerts, and progress indicators.
+  - [ ] Confirm there is no stock-level red/green verdict treatment, no `"Confidence Score"` / `"Risk Score"`, no persisted `"Past Reports"`, and no `"Live Market Data"` misrepresentation.
   - [ ] Verify layout at narrow mobile, tablet, and desktop widths.
 - [ ] Acceptance: the application shell matches the approved visual direction and passes basic keyboard/contrast review.
 
@@ -106,12 +106,13 @@ A checked box means the user has reviewed and accepted the task, not merely that
 
 ### 2.1 Implement the provenance-aware data model
 
-- [ ] Add SQLAlchemy models and Alembic migrations for `data_snapshot`, `influencer`, `sebi_register_entry`, `stock`, `price_history`, `stock_info`, `benchmark_history`, `surveillance_entry`, and `tip`.
-  - [ ] Add foreign keys, unique constraints, indexes, enums, and explicit data labels.
+- [ ] Add Supabase PostgreSQL SQL migrations (`supabase/migrations/`) and TypeScript DB types/repositories for `data_snapshot`, `influencer`, `sebi_register_entry`, `stock` (including `instrument_type` `EQUITY`/`DERIVATIVE` and nullable `underlying_ticker`), `price_history`, `stock_info`, `benchmark_history`, `surveillance_entry`, and `tip`.
+  - [ ] Add foreign keys, unique constraints, indexes, enums, explicit data labels, and RLS enabled on every `public` table.
   - [ ] Add ingestion-run audit fields/table.
   - [ ] Preserve immutable snapshot references and dates.
-  - [ ] Confirm no user profile, portfolio, pasted-tip history, or personal-data table exists.
-- [ ] Acceptance: schema migrations pass on a fresh database and constraints prevent ambiguous provenance records.
+  - [ ] Confirm no user profile, portfolio, uploaded photo/video storage, pasted-tip history, or personal-data table exists.
+  - [ ] Run Supabase advisors (`get_advisors`) and verify zero critical security/RLS findings.
+- [ ] Acceptance: schema migrations apply cleanly in Supabase PostgreSQL and constraints prevent ambiguous provenance records.
 
 ### 2.2 Build snapshot ingestion and validation
 
@@ -124,10 +125,17 @@ A checked box means the user has reviewed and accepted the task, not merely that
 
 ### 2.3 Seed the demo corpus
 
-- [ ] Prepare a small curated creator, stock, and historical-tip dataset.
-  - [ ] Include hand-authored Hinglish examples for missing stop-loss, urgency/hype, vague disclosure, and clear disclosure.
+- [ ] Prepare a curated creator, stock/instrument, and historical-tip dataset incorporating the media assets in `photos/` and `videos/`:
+  - [ ] `photos/Ashish_Kyal__Sensex_82900_CE__Not_Registered.jpeg`
+  - [ ] `photos/Chinmay_Dudhane__Nifty_25500_CE__Registered.jpeg`
+  - [ ] `photos/Harsh_Bhagat__Nifty_25600_CE__Not_Registered.jpeg`
+  - [ ] `videos/Rakesh_Bansal__Borosil_Renewables_Ltd__Registered.App.mp4`
+  - [ ] `videos/Rakesh_Bansal__Sarveshwar_Foods__Registered.App.mp4`
+  - [ ] `videos/Vivek_Rana__Wipro_Limited__Not_Registered.App.mp4`
+  - [ ] Map each `<Influencer>__<Stock>__<Registration>` asset to curated `influencer` (including channel aliases like `Trading cafe India`), `stock`, `tip`, and dated `sebi_register_entry` snapshot records.
+  - [ ] Include hand-authored Hinglish examples for missing/gated stop-loss (`SL PAID`, `SL. VIP PREMIUM`), urgency/hype, vague disclosure, and clear disclosure.
   - [ ] Include real historical market snapshots only when their source and date are verified.
-  - [ ] Mark every synthetic tip at row level and expose that label in API responses.
+  - [ ] Mark every synthetic/mixed tip at row level and expose that label in API responses.
   - [ ] Add data coverage notes and known gaps.
 - [ ] Acceptance: demo data is reproducible, clearly labelled, and contains no synthetic market values represented as real.
 
@@ -138,7 +146,7 @@ A checked box means the user has reviewed and accepted the task, not merely that
   - [ ] Add configurable lookback and versioned threshold configuration.
   - [ ] Calibrate thresholds against enforcement cases and a normal-stock comparison set.
   - [ ] Return `Within normal range`, `Needs attention`, or `Could not verify` with values, dates, sources, and method versions.
-  - [ ] Add tests for missing data, stale snapshots, non-trading days, zero/invalid volume, and insufficient history.
+  - [ ] Add tests for missing data, stale snapshots, non-trading days, zero/invalid volume, insufficient history, and derivative/index-option contracts (`Sensex 82900 CE`, `Nifty 25500 CE`, `Nifty 25600 CE`) returning `Could not verify` for inapplicable equity-only checks.
 - [ ] Acceptance: each check is deterministic, reproducible from a snapshot ID, and never invents a value when source data is missing.
 
 ### 2.5 Implement benchmark-adjusted creator statistics
@@ -151,9 +159,9 @@ A checked box means the user has reviewed and accepted the task, not merely that
   - [ ] Return interval, sample counts, benchmark definition, and `Not enough tips to judge` state.
 - [ ] Acceptance: unit tests cover wins, losses, ties, insufficient samples, and benchmark alignment; no raw creator accuracy leaderboard is exposed.
 
-### 2.6 Implement template report builder and Output Guard
+### 2.6 Implement template report builder (Information Verdict) and Output Guard
 
-- [ ] Create an allowlist of reviewed evidence-only sentence templates.
+- [ ] Create an allowlist of reviewed evidence-only sentence templates for the **Information Verdict (Guarded Facts Card)**.
   - [ ] Build facts-card sections from backend-verified values and source references.
   - [ ] Add deterministic prohibited-language checks and semantic/adversarial test cases.
   - [ ] Add a fixed safe fallback for blocked output.
@@ -163,12 +171,12 @@ A checked box means the user has reviewed and accepted the task, not merely that
 
 ### 2.7 Expose the core REST API
 
-- [ ] Implement the check, prices, tip-marker, report, snapshot metadata, and health endpoints.
-  - [ ] Define Pydantic request/response contracts and stable error codes.
+- [ ] Implement the multimodal tip-parse (photo/video/text + influencer & stock), SEBI lookup, stock lookup, prices, tip-marker, checks, report, snapshot metadata, demo-corpus metadata, dated benchmark overview (`NIFTY_50`, `SENSEX`, `BANKNIFTY`), and health endpoints.
+  - [ ] Define Zod request/response contracts, Multer in-memory multipart file validation (MIME/magic bytes, size, duration), and stable error codes.
   - [ ] Include source snapshot IDs, as-of dates, data labels, and methodology versions.
-  - [ ] Add integration tests against PostgreSQL fixtures.
+  - [ ] Add integration tests with Supertest/Vitest against Supabase/PostgreSQL fixtures and verify uploaded media is never persisted after request completion.
   - [ ] Confirm handlers contain no duplicated market formulas.
-- [ ] Acceptance: API consumers can retrieve chart data, exact-date tip details, market checks, creator interval, and a guarded facts card.
+- [ ] Acceptance: API consumers can submit photo, video, or text with influencer and stock names and retrieve chart data, exact-date tip details, market checks, creator interval, and a guarded Information Verdict (facts card).
 
 ### 2.8 Build the Tip Time Machine and evidence UI
 
@@ -179,15 +187,16 @@ A checked box means the user has reviewed and accepted the task, not merely that
   - [ ] Show loading, no-data, stale-data, and partial-data states.
 - [ ] Acceptance: marker selection returns only the correct creator-stock-date tip records, and chart provenance is visible.
 
-### 2.9 Build the Claim Ledger parser and structured fallback
+### 2.9 Build the Multimodal Claim Ledger parser and structured fallback
 
-- [ ] Implement the bounded parser adapter and Claim Ledger response contract.
-  - [ ] Parse stock, direction, target price, deadline, and stop-loss only.
-  - [ ] Validate source spans against the original text.
+- [ ] Implement the bounded multimodal extraction adapter (photo OCR/vision, short video ASR/frame text extraction, and Hinglish text parsing) plus the Claim Ledger response contract.
+  - [ ] Accept any photo (`.jpeg`, `.png`, `.webp`), video (`.mp4`, `.webm`, `.mov`), or pasted text alongside user-entered **influencer name** and **stock/instrument name**.
+  - [ ] Parse stock/instrument, direction, target price, deadline, and stop-loss only (flagging gated terms like `SL PAID` / `SL. VIP PREMIUM` as `Not stated`/gated).
+  - [ ] Validate source spans against the original/extracted text and discard ephemeral media buffers immediately.
   - [ ] Render `Not stated` for missing fields and `Unclear` for ambiguous extraction.
-  - [ ] Add manual correction and structured influencer/stock lookup fallback.
-  - [ ] Add provider timeout, invalid JSON, and unavailable-provider handling.
-- [ ] Acceptance: parser failure never blocks structured lookup; no hallucinated or unsupported field is presented as verified.
+  - [ ] Add manual correction and guarantee that user-entered influencer + stock lookup completes the flow even when media extraction or LLM parsing fails or times out.
+  - [ ] Add provider timeout, invalid JSON, oversized/unsupported media, and unavailable-provider handling.
+- [ ] Acceptance: media/parser failure never blocks influencer + stock lookup; uploaded media is never persisted; no hallucinated or unsupported field is presented as verified.
 
 ### 2.10 Implement Hype Detector and Disclosure Grade
 
@@ -207,14 +216,14 @@ A checked box means the user has reviewed and accepted the task, not merely that
   - [ ] Ensure a missing match does not block the rest of the autopsy.
 - [ ] Acceptance: lookup behavior is explainable, dated, neutral, and non-blocking.
 
-### 2.12 Build the facts card and five-step journey
+### 2.12 Build the Information Verdict (facts card) and five-step journey
 
-- [ ] Connect the dual-mode input, Claim Ledger, identity evidence, market checks, chart, and guarded facts card.
+- [ ] Connect the Dashboard Overview (3-column `NIFTY 50` / `SENSEX` / `BANKNIFTY` dated benchmark cards + Curated Demo & In-Session Analyses table over `DashBoardBackground.jsx`), multimodal input (photo, video, or text + influencer name & stock name + curated `photos/`/`videos/` samples), Claim Ledger, identity evidence, market checks, chart, and guarded Information Verdict (facts card).
   - [ ] Add progress navigation and return-to-evidence behavior.
   - [ ] Show every check's measured value, status, source, as-of date, and explanation.
   - [ ] Show creator credible interval or `Not enough tips to judge`.
-  - [ ] Display the mandatory disclaimer on every facts card.
-- [ ] Acceptance: a user can complete the full analysis from either input mode using preloaded snapshots.
+  - [ ] Display the mandatory disclaimer on every Information Verdict / facts card.
+- [ ] Acceptance: a user can complete the full analysis from photo, video, text, or direct influencer + stock lookup using preloaded snapshots.
 
 ### 2.13 Implement Pause & Plan
 
@@ -227,12 +236,12 @@ A checked box means the user has reviewed and accepted the task, not merely that
 
 ### 2.14 Complete core end-to-end and safety verification
 
-- [ ] Add Playwright flows for pasted input and structured fallback.
+- [ ] Add Playwright flows for photo upload, video upload, pasted text, and direct influencer + stock fallback (including curated `photos/` and `videos/` samples).
   - [ ] Verify not-found SEBI result continues through the full analysis.
-  - [ ] Verify unknown market data renders `Could not verify`.
+  - [ ] Verify unknown/derivative market data renders `Could not verify`.
   - [ ] Verify exact-date chart marker behavior.
   - [ ] Verify report disclaimer and Output Guard behavior.
-  - [ ] Verify no user text or Pause & Plan answers are persisted to browser storage or backend logs.
+  - [ ] Verify no uploaded photo/video, user text, or Pause & Plan answers are persisted to browser storage or backend logs/DB.
 - [ ] Acceptance: all MVP core paths pass on desktop and mobile emulation; failures are documented, not hidden.
 
 ## Phase 3 — Polish, Evaluation, and Release Readiness
@@ -316,7 +325,7 @@ A checked box means the user has reviewed and accepted the task, not merely that
 
 ## Backlog / Deferred Beyond MVP
 
-- [ ] Screenshot/OCR and WhatsApp share-to-app input, subject to privacy and platform-policy review.
+- [ ] OS-level WhatsApp share-to-app integration, subject to privacy and platform-policy review.
 - [ ] Persistent user accounts or saved analyses (not permitted without a separate product/privacy review).
 - [ ] Real-time social-platform ingestion or scraping (excluded from the product direction).
 - [ ] Broker integration, trading, portfolio tracking, and buy/sell/hold recommendations (excluded from the product direction).
