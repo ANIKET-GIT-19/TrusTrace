@@ -35,7 +35,7 @@ export function DashboardLayout() {
   }, [drawerOpen]);
 
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-[#F3EFE7] p-2.5 sm:p-5 lg:p-7">
+    <div className="relative isolate h-[100dvh] w-full overflow-hidden bg-[#F3EFE7] p-2 sm:p-4 lg:p-5">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-full focus:bg-[#161A18] focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-[#FAF8F4]"
@@ -45,9 +45,10 @@ export function DashboardLayout() {
       {/* Verbatim Wayglim WebGL2 animated gradient background from ui-ux/DashBoardBackground.jsx */}
       <DashBoardBackground />
 
-      <div className="glass-shell relative z-10 mx-auto flex min-h-[calc(100vh-20px)] w-full max-w-[1360px] flex-col overflow-hidden rounded-[22px] sm:min-h-[calc(100vh-40px)] sm:rounded-[24px] lg:min-h-[calc(100vh-56px)] lg:flex-row">
+      {/* Single-Window Frosted Glass Dashboard Shell (internal scrolling per workspace page) */}
+      <div className="glass-shell relative z-10 mx-auto flex h-full w-full max-w-[1380px] flex-col overflow-hidden rounded-[20px] sm:rounded-[24px] lg:flex-row">
         {/* Mobile Top Bar */}
-        <header className="flex items-center justify-between border-b border-[rgba(22,26,24,0.08)] bg-white/60 px-4 py-3 lg:hidden">
+        <header className="flex shrink-0 items-center justify-between border-b border-[rgba(22,26,24,0.08)] bg-white/65 px-4 py-2.5 lg:hidden">
           <Link to="/" className="rounded-xl">
             <BrandMark />
           </Link>
@@ -56,7 +57,7 @@ export function DashboardLayout() {
             aria-label={drawerOpen ? "Close navigation drawer" : "Open navigation drawer"}
             aria-expanded={drawerOpen}
             onClick={() => setDrawerOpen((prev) => !prev)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[rgba(22,26,24,0.09)] bg-white/80 text-[#161A18]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[rgba(22,26,24,0.09)] bg-white/80 text-[#161A18]"
           >
             {drawerOpen ? <X size={20} weight="regular" /> : <List size={20} weight="regular" />}
           </button>
@@ -66,7 +67,7 @@ export function DashboardLayout() {
         {drawerOpen && (
           <nav
             aria-label="Workspace navigation mobile"
-            className="flex flex-col gap-1 border-b border-[rgba(22,26,24,0.08)] bg-white/90 p-3 lg:hidden"
+            className="flex shrink-0 flex-col gap-1 border-b border-[rgba(22,26,24,0.08)] bg-white/92 p-3 lg:hidden"
           >
             {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
               <NavLink
@@ -75,9 +76,9 @@ export function DashboardLayout() {
                 end={end}
                 onClick={() => setDrawerOpen(false)}
                 className={({ isActive }) =>
-                  `flex h-11 items-center gap-3 rounded-xl px-3.5 text-[14px] font-medium transition-colors ${
+                  `flex h-10 items-center gap-3 rounded-xl px-3.5 text-[14px] font-medium transition-colors ${
                     isActive
-                      ? "bg-[#E6F2EC] text-[#1F4D3A] font-semibold"
+                      ? "bg-[#E6F2EC] font-semibold text-[#1F4D3A]"
                       : "text-[#4A524D] hover:bg-black/5 hover:text-[#161A18]"
                   }`
                 }
@@ -89,23 +90,23 @@ export function DashboardLayout() {
           </nav>
         )}
 
-        {/* Desktop Frosted Left Sidebar Rail (matching ui-ux/DashBoard.png) */}
-        <aside className="hidden w-[240px] shrink-0 flex-col justify-between border-r border-[rgba(22,26,24,0.08)] bg-[rgba(255,255,255,0.44)] p-5 lg:flex">
-          <div className="space-y-6">
+        {/* Desktop Fixed Frosted Left Sidebar Rail (always fits within single window) */}
+        <aside className="hidden h-full w-[236px] shrink-0 flex-col justify-between overflow-y-auto border-r border-[rgba(22,26,24,0.08)] bg-[rgba(255,255,255,0.46)] p-4 xl:p-5 lg:flex">
+          <div className="space-y-5">
             <Link to="/" className="inline-flex rounded-xl">
               <BrandMark />
             </Link>
 
-            <nav aria-label="Workspace navigation" className="flex flex-col gap-1.5">
+            <nav aria-label="Workspace navigation" className="flex flex-col gap-1">
               {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
                 <NavLink
                   key={to}
                   to={to}
                   end={end}
                   className={({ isActive }) =>
-                    `flex h-11 items-center gap-3 rounded-xl px-3.5 text-[14px] transition-all ${
+                    `flex h-10 items-center gap-3 rounded-xl px-3.5 text-[14px] transition-all ${
                       isActive
-                        ? "bg-white/90 font-semibold text-[#161A18] shadow-[0_4px_14px_rgba(22,26,24,0.06)] border border-[rgba(22,26,24,0.07)]"
+                        ? "border border-[rgba(22,26,24,0.07)] bg-white/92 font-semibold text-[#161A18] shadow-[0_4px_14px_rgba(22,26,24,0.06)]"
                         : "font-medium text-[#4A524D] hover:bg-white/55 hover:text-[#161A18]"
                     }`
                   }
@@ -117,43 +118,48 @@ export function DashboardLayout() {
             </nav>
           </div>
 
-          <div className="space-y-3">
-            {/* Zero-persistence privacy indicator */}
-            <div className="flex items-center gap-2 rounded-xl border border-[rgba(22,26,24,0.08)] bg-white/65 px-3 py-2 text-[12px] font-medium text-[#4A524D]">
-              <LockSimple size={15} weight="duotone" className="shrink-0 text-[#4A7C64]" aria-hidden="true" />
+          <div className="space-y-2.5 pt-4">
+            <div className="flex items-center gap-2 rounded-xl border border-[rgba(22,26,24,0.08)] bg-white/65 px-3 py-2 text-[11.5px] font-medium text-[#4A524D]">
+              <LockSimple
+                size={14}
+                weight="duotone"
+                className="shrink-0 text-[#4A7C64]"
+                aria-hidden="true"
+              />
               <span>No login · No personal data</span>
             </div>
 
-            {/* Real vs Synthetic provenance legend */}
-            <div className="rounded-xl border border-[rgba(22,26,24,0.08)] bg-white/60 px-3 py-2.5 text-[11.5px] leading-relaxed text-[#6E7771]">
+            <div className="rounded-xl border border-[rgba(22,26,24,0.08)] bg-white/60 px-3 py-2 text-[11px] leading-relaxed text-[#6E7771]">
               <p className="m-0 font-semibold text-[#4A524D]">Provenance Legend</p>
-              <p className="mt-1 mb-0">
-                <strong className="text-[#1F4D3A]">Real</strong> = dated NSE/BSE or SEBI snapshot.{" "}
-                <strong className="text-[#4A524D]">Mixed / Demo</strong> = curated corpus tips.
+              <p className="mt-0.5 mb-0">
+                <strong className="text-[#1F4D3A]">Real</strong> = NSE/BSE or SEBI snapshot.{" "}
+                <strong className="text-[#4A524D]">Mixed/Demo</strong> = curated tips.
               </p>
             </div>
 
-            {/* Bottom Mission Shield Card matching ui-ux/DashBoard.png */}
-            <div className="rounded-2xl border border-[rgba(22,26,24,0.08)] bg-white/78 p-4 shadow-[0_4px_16px_-2px_rgba(22,26,24,0.05)]">
-              <ShieldCheck size={22} weight="duotone" className="text-[#1F4D3A]" aria-hidden="true" />
-              <p className="mt-2.5 mb-0 text-[13px] leading-[1.45] font-medium text-[#161A18]">
+            <div className="rounded-2xl border border-[rgba(22,26,24,0.08)] bg-white/80 p-3.5 shadow-[0_4px_16px_-2px_rgba(22,26,24,0.05)]">
+              <ShieldCheck size={20} weight="duotone" className="text-[#1F4D3A]" aria-hidden="true" />
+              <p className="mt-2 mb-0 text-[12.5px] leading-[1.4] font-medium text-[#161A18]">
                 {CORE_PRODUCT_RULE}
               </p>
             </div>
           </div>
         </aside>
 
-        {/* Fluid Main Workspace */}
-        <main
-          id="main-content"
-          tabIndex={-1}
-          className="flex min-w-0 flex-1 flex-col justify-between gap-6 p-4 sm:p-6 lg:p-7"
-        >
-          <div className="space-y-6">
+        {/* Fluid Main Column: internal scrolling content area + pinned compact disclaimer */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 lg:p-6"
+          >
             <Outlet />
+          </main>
+
+          <div className="shrink-0 border-t border-[rgba(22,26,24,0.08)] bg-[rgba(250,248,244,0.72)] px-4 py-2.5 sm:px-5 lg:px-6">
+            <DisclaimerBanner />
           </div>
-          <DisclaimerBanner />
-        </main>
+        </div>
       </div>
     </div>
   );

@@ -101,12 +101,12 @@ export function DashboardOverviewPage() {
   const latestLabel = benchmarkList.find((b) => b.data_label)?.data_label ?? null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Intake Bar + Compliant Snapshot Status Pill */}
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+      <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center">
         <form
           onSubmit={handleSubmit}
-          className="glass-card flex flex-1 flex-col gap-2 rounded-2xl p-2 sm:flex-row sm:items-center sm:rounded-full sm:pl-4"
+          className="glass-card flex flex-1 flex-col gap-2 rounded-2xl p-1.5 sm:flex-row sm:items-center sm:rounded-full sm:pl-4"
         >
           <label htmlFor="quick-tip-intake" className="sr-only">
             Paste a Hinglish tip or enter an influencer and stock name
@@ -119,23 +119,23 @@ export function DashboardOverviewPage() {
               value={quickInput}
               onChange={(e) => setQuickInput(e.target.value)}
               placeholder="Paste a Hinglish tip, or enter influencer & stock name..."
-              className="h-10 w-full bg-transparent text-[14.5px] text-[#161A18] placeholder:text-[#6E7771] focus:outline-none"
+              className="h-9 w-full bg-transparent text-[14px] text-[#161A18] placeholder:text-[#6E7771] focus:outline-none"
             />
           </div>
-          <Button type="submit" size="md" className="h-10 shrink-0 px-5">
+          <Button type="submit" size="md" className="h-9 shrink-0 px-5 text-[13.5px]">
             <span>Analyze</span>
             <ArrowRight size={15} weight="bold" aria-hidden="true" />
           </Button>
         </form>
 
         {/* Compliant provenance badge: NEVER "Live Market Data" */}
-        <div className="glass-card-subtle flex items-center gap-2.5 rounded-2xl px-4 py-2.5 sm:self-start xl:self-auto">
+        <div className="glass-card-subtle flex items-center gap-2.5 rounded-2xl px-3.5 py-2 sm:self-start xl:self-auto">
           <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#4A7C64]" aria-hidden="true" />
           <div className="leading-tight">
-            <p className="m-0 text-[12.5px] font-semibold text-[#161A18]">
+            <p className="m-0 text-[12px] font-semibold text-[#161A18]">
               Dated Market Snapshots · NSE / BSE
             </p>
-            <p className="tabular-nums-lining m-0 text-[11.5px] text-[#6E7771]">
+            <p className="tabular-nums-lining m-0 text-[11px] text-[#6E7771]">
               {latestAsOf ? `Snapshot as of ${latestAsOf}` : "Could not verify snapshot date"}
             </p>
           </div>
@@ -143,11 +143,11 @@ export function DashboardOverviewPage() {
       </div>
 
       {/* 3-Column Market Overview Strip */}
-      <section aria-labelledby="market-overview-heading" className="space-y-3">
+      <section aria-labelledby="market-overview-heading" className="space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h1
             id="market-overview-heading"
-            className="text-[20px] font-semibold tracking-[-0.02em] text-[#161A18]"
+            className="m-0 text-[18px] font-semibold tracking-[-0.02em] text-[#161A18]"
           >
             Market Overview
           </h1>
@@ -157,24 +157,24 @@ export function DashboardOverviewPage() {
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-3">
           {benchmarkList.map((indexCard) => {
             const available = indexCard.status === "AVAILABLE" && indexCard.close !== null;
             return (
-              <GlassCard key={indexCard.key} compact className="flex flex-col justify-between gap-3">
+              <GlassCard key={indexCard.key} compact className="flex flex-col justify-between gap-2 !p-3.5">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="m-0 text-[12px] font-semibold tracking-[0.04em] text-[#6E7771] uppercase">
+                    <p className="m-0 text-[11.5px] font-semibold tracking-[0.04em] text-[#6E7771] uppercase">
                       {indexCard.label}
                     </p>
-                    <p className="tabular-nums-lining mt-1 mb-0 text-[22px] font-bold tracking-[-0.02em] text-[#161A18]">
+                    <p className="tabular-nums-lining mt-0.5 mb-0 text-[21px] font-bold tracking-[-0.02em] text-[#161A18]">
                       {available
                         ? indexCard.close!.toLocaleString("en-IN", { minimumFractionDigits: 2 })
                         : "—"}
                     </p>
                   </div>
                   {available ? (
-                    <span className="tabular-nums-lining rounded-full bg-[#E6F2EC] px-2.5 py-1 text-[11.5px] font-semibold text-[#1F4D3A]">
+                    <span className="tabular-nums-lining rounded-full bg-[#E6F2EC] px-2.5 py-0.5 text-[11.5px] font-semibold text-[#1F4D3A]">
                       {indexCard.change !== null && indexCard.change >= 0 ? "+" : ""}
                       {indexCard.change_percent}%
                     </span>
@@ -183,13 +183,13 @@ export function DashboardOverviewPage() {
                   )}
                 </div>
 
-                <div className="flex items-end justify-between gap-3">
-                  <p className="tabular-nums-lining m-0 text-[12px] text-[#6E7771]">
+                <div className="flex items-end justify-between gap-2">
+                  <p className="tabular-nums-lining m-0 truncate text-[11.5px] text-[#6E7771]">
                     {available && indexCard.as_of_date
                       ? `${mapDataLabel(indexCard.data_label)} · As of ${indexCard.as_of_date}`
                       : "Snapshot unavailable"}
                   </p>
-                  <svg viewBox="0 0 156 40" className="h-8 w-24 shrink-0" aria-hidden="true">
+                  <svg viewBox="0 0 156 40" className="h-7 w-20 shrink-0" aria-hidden="true">
                     <polyline
                       fill="none"
                       stroke="#3B8E6A"
@@ -207,21 +207,21 @@ export function DashboardOverviewPage() {
       </section>
 
       {/* Curated Demo & In-Session Analyses Table */}
-      <section aria-labelledby="demo-analyses-heading" className="space-y-3">
+      <section aria-labelledby="demo-analyses-heading" className="space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2
               id="demo-analyses-heading"
-              className="text-[18px] font-semibold tracking-[-0.015em] text-[#161A18]"
+              className="m-0 text-[17px] font-semibold tracking-[-0.015em] text-[#161A18]"
             >
               Curated Demo &amp; In-Session Analyses
             </h2>
-            <p className="mt-0.5 mb-0 text-[13px] text-[#6E7771]">
+            <p className="mt-0.5 mb-0 text-[12.5px] text-[#6E7771]">
               Zero history is persisted across sessions. Select any curated sample to inspect the
               full five-step autopsy.
             </p>
           </div>
-          <Button variant="ghost" onClick={() => navigate("/corpus")} className="h-9 px-3 text-[13px]">
+          <Button variant="ghost" onClick={() => navigate("/corpus")} className="h-8 px-3 text-[12.5px]">
             <span>View Corpus</span>
             <CaretRight size={14} weight="bold" aria-hidden="true" />
           </Button>
@@ -229,33 +229,33 @@ export function DashboardOverviewPage() {
 
         <GlassCard className="overflow-hidden p-0 sm:p-0">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] border-collapse text-left">
+            <table className="w-full min-w-[760px] border-collapse text-left">
               <thead>
-                <tr className="border-b border-[rgba(22,26,24,0.08)] bg-white/60 text-[11.5px] font-semibold tracking-[0.04em] text-[#4A524D] uppercase">
-                  <th className="px-5 py-3.5">Tip / Stock &amp; Instrument</th>
-                  <th className="px-4 py-3.5">Creator &amp; Media</th>
-                  <th className="px-4 py-3.5">SEBI Snapshot</th>
-                  <th className="px-4 py-3.5">Evidence Scope</th>
-                  <th className="px-5 py-3.5 text-right">Provenance</th>
+                <tr className="border-b border-[rgba(22,26,24,0.08)] bg-white/60 text-[11px] font-semibold tracking-[0.04em] text-[#4A524D] uppercase">
+                  <th className="px-4 py-2.5">Tip / Stock &amp; Instrument</th>
+                  <th className="px-3 py-2.5">Creator &amp; Media</th>
+                  <th className="px-3 py-2.5">SEBI Snapshot</th>
+                  <th className="px-3 py-2.5">Evidence Scope</th>
+                  <th className="px-4 py-2.5 text-right">Provenance</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[rgba(22,26,24,0.07)] text-[14px]">
+              <tbody className="divide-y divide-[rgba(22,26,24,0.07)] text-[13.5px]">
                 {state.inSessionRuns.map((run) => (
                   <tr key={run.id} className="bg-[#E6F2EC]/30">
-                    <td className="px-5 py-3.5 font-semibold text-[#161A18]">
+                    <td className="px-4 py-2.5 font-semibold text-[#161A18]">
                       {run.instrumentName}
                       <span className="ml-2 text-[11.5px] font-medium text-[#1F4D3A]">
                         (In-session)
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-[#4A524D]">{run.influencerName}</td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-2.5 text-[#4A524D]">{run.influencerName}</td>
+                    <td className="px-3 py-2.5">
                       <StatusBadge tone="unverified" label={run.sebiStatus} />
                     </td>
-                    <td className="tabular-nums-lining px-4 py-3.5 text-[13px] text-[#4A524D]">
+                    <td className="tabular-nums-lining px-3 py-2.5 text-[12.5px] text-[#4A524D]">
                       Tip date: {run.tipDate}
                     </td>
-                    <td className="px-5 py-3.5 text-right text-[12px] text-[#6E7771]">
+                    <td className="px-4 py-2.5 text-right text-[12px] whitespace-nowrap text-[#6E7771]">
                       In-memory only
                     </td>
                   </tr>
@@ -264,47 +264,49 @@ export function DashboardOverviewPage() {
                 {(demoCasesQuery.data ?? []).length > 0
                   ? (demoCasesQuery.data ?? []).map((item) => (
                       <tr key={item.id} className="transition-colors hover:bg-white/60">
-                        <td className="px-5 py-3.5">
+                        <td className="max-w-[290px] px-4 py-2.5">
                           <button
                             type="button"
                             onClick={() => {
                               loadDemoCase(item);
                               navigate("/analyze");
                             }}
-                            className="group flex cursor-pointer flex-col text-left"
+                            className="group flex w-full cursor-pointer flex-col text-left"
                           >
                             <span className="font-semibold text-[#161A18] group-hover:text-[#1F4D3A]">
                               {item.instrument_name}
                             </span>
-                            <span className="text-[12px] text-[#6E7771]">{item.coverage_note}</span>
+                            <span className="line-clamp-1 text-[12px] text-[#6E7771]">
+                              {item.coverage_note}
+                            </span>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5">
+                        <td className="px-3 py-2.5 whitespace-nowrap">
                           <div className="flex items-center gap-2 text-[#161A18]">
                             {item.media_type === "PHOTO" ? (
                               <ImageIcon
-                                size={16}
+                                size={15}
                                 weight="duotone"
-                                className="text-[#4A7C64]"
+                                className="shrink-0 text-[#4A7C64]"
                                 aria-hidden="true"
                               />
                             ) : (
                               <FilmStrip
-                                size={16}
+                                size={15}
                                 weight="duotone"
-                                className="text-[#4A7C64]"
+                                className="shrink-0 text-[#4A7C64]"
                                 aria-hidden="true"
                               />
                             )}
                             <div>
                               <div className="font-medium">{item.influencer_name}</div>
                               {item.alias && (
-                                <div className="text-[12px] text-[#6E7771]">{item.alias}</div>
+                                <div className="text-[11.5px] text-[#6E7771]">{item.alias}</div>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5">
+                        <td className="px-3 py-2.5">
                           <StatusBadge
                             tone={item.sebi_expected_status === "REGISTERED" ? "neutral_ok" : "unverified"}
                             label={
@@ -314,7 +316,7 @@ export function DashboardOverviewPage() {
                             }
                           />
                         </td>
-                        <td className="px-4 py-3.5">
+                        <td className="px-3 py-2.5">
                           <StatusBadge
                             tone={item.instrument_type === "DERIVATIVE" ? "unverified" : "attention"}
                             label={
@@ -324,8 +326,8 @@ export function DashboardOverviewPage() {
                             }
                           />
                         </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(22,26,24,0.09)] bg-[#EFECE6] px-2.5 py-1 text-[11.5px] font-semibold text-[#4A524D]">
+                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(22,26,24,0.09)] bg-[#EFECE6] px-2.5 py-1 text-[11.5px] font-semibold whitespace-nowrap text-[#4A524D]">
                             <Database size={12} weight="regular" aria-hidden="true" />
                             Curated Demo · Mixed
                           </span>
@@ -334,17 +336,19 @@ export function DashboardOverviewPage() {
                     ))
                   : CURATED_DEMO_CORPUS.map((item) => (
                       <tr key={item.id} className="transition-colors hover:bg-white/60">
-                        <td className="px-5 py-3.5 font-semibold text-[#161A18]">
+                        <td className="px-4 py-2.5 font-semibold text-[#161A18]">
                           {item.instrument}
                         </td>
-                        <td className="px-4 py-3.5 text-[#161A18]">{item.influencer}</td>
-                        <td className="px-4 py-3.5">
+                        <td className="px-3 py-2.5 whitespace-nowrap text-[#161A18]">
+                          {item.influencer}
+                        </td>
+                        <td className="px-3 py-2.5">
                           <StatusBadge tone="unverified" label={item.corpusTag} />
                         </td>
-                        <td className="px-4 py-3.5">
+                        <td className="px-3 py-2.5">
                           <StatusBadge tone="unverified" label={item.instrumentType} />
                         </td>
-                        <td className="px-5 py-3.5 text-right text-[12px] text-[#4A524D]">
+                        <td className="px-4 py-2.5 text-right text-[12px] whitespace-nowrap text-[#4A524D]">
                           {item.provenance}
                         </td>
                       </tr>

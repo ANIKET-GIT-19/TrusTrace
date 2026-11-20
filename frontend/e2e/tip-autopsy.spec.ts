@@ -11,10 +11,26 @@ test.describe("Tip Autopsy Core E2E & Safety Verification (Task 2.14)", () => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Think Before You Trust.");
 
-    // Navigate into workspace
+    // Verify Hero is strictly single-page with ZERO vertical or horizontal overflow
+    const heroOverflow = await page.evaluate(() => ({
+      x: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      y: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+    }));
+    expect(heroOverflow.x).toBeLessThanOrEqual(2);
+    expect(heroOverflow.y).toBeLessThanOrEqual(2);
+
+    // Navigate into single-window dashboard shell
     await page.getByRole("button", { name: /Analyze a Tip/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByText("Dated Market Snapshots · NSE / BSE")).toBeVisible();
+
+    // Verify Dashboard shell fits in a single window (outer document has zero vertical overflow; inner pane scrolls)
+    const dashOverflow = await page.evaluate(() => ({
+      x: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      y: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+    }));
+    expect(dashOverflow.x).toBeLessThanOrEqual(2);
+    expect(dashOverflow.y).toBeLessThanOrEqual(2);
 
     // Open New Analysis
     await page.goto("/analyze");

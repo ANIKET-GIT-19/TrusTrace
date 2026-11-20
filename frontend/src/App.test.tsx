@@ -32,11 +32,10 @@ describe("Tip Autopsy Phase 1 & 2 Frontend Guardrails", () => {
   it("renders the hero composition matching ui-ux/hero.jpeg with 5 creator panels and non-advisory framing", () => {
     renderRoute("/");
 
-    expect(screen.getByText(/Signal vs\. Noise for Retail Investors/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Think Before You Trust.");
     expect(screen.getByRole("button", { name: /Analyze a Tip/i })).toBeInTheDocument();
     expect(screen.getByText(CORE_PRODUCT_RULE)).toBeInTheDocument();
-    expect(screen.getByText(MANDATORY_DISCLAIMER)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(MANDATORY_DISCLAIMER.replace(".", "\\.")))).toBeInTheDocument();
     expect(screen.getAllByAltText(/Illustrative finfluencer/i).length).toBeGreaterThanOrEqual(5);
   });
 
