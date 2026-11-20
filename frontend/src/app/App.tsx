@@ -1,14 +1,33 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { DashboardLayout } from "./DashboardLayout";
-import { AnalyzeWorkspacePage } from "../features/analyze/AnalyzeWorkspacePage";
-import { DashboardOverviewPage } from "../features/dashboard/DashboardOverviewPage";
-import {
-  DemoCorpusPage,
-  HowChecksWorkPage,
-} from "../features/dashboard/WorkspacePlaceholderPages";
 import { HeroPage } from "../features/hero/HeroPage";
 import { AutopsyProvider } from "../features/workflow/AutopsyContext";
+
+// Code-split workspace routes so initial Hero load stays fast on mobile networks (Task 3.2)
+const DashboardLayout = lazy(() =>
+  import("./DashboardLayout").then((m) => ({ default: m.DashboardLayout }))
+);
+const DashboardOverviewPage = lazy(() =>
+  import("../features/dashboard/DashboardOverviewPage").then((m) => ({
+    default: m.DashboardOverviewPage,
+  }))
+);
+const AnalyzeWorkspacePage = lazy(() =>
+  import("../features/analyze/AnalyzeWorkspacePage").then((m) => ({
+    default: m.AnalyzeWorkspacePage,
+  }))
+);
+const DemoCorpusPage = lazy(() =>
+  import("../features/dashboard/WorkspacePlaceholderPages").then((m) => ({
+    default: m.DemoCorpusPage,
+  }))
+);
+const HowChecksWorkPage = lazy(() =>
+  import("../features/dashboard/WorkspacePlaceholderPages").then((m) => ({
+    default: m.HowChecksWorkPage,
+  }))
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,18 +39,36 @@ const queryClient = new QueryClient({
   },
 });
 
+function RouteLoadingFallback() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex min-h-screen items-center justify-center bg-[#FAF8F4] p-6"
+    >
+      <div className="w-full max-w-[420px] space-y-3 rounded-2xl border border-[rgba(22,26,24,0.08)] bg-white/80 p-6">
+        <div className="skeleton-shimmer h-5 w-40 rounded-lg" />
+        <div className="skeleton-shimmer h-24 w-full rounded-xl" />
+        <span className="sr-only">Loading Tip Autopsy workspace...</span>
+      </div>
+    </div>
+  );
+}
+
 export function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<HeroPage />} />
-      <Route element={<DashboardLayout />}>
-        <Route path="/dashboard" element={<DashboardOverviewPage />} />
-        <Route path="/analyze" element={<AnalyzeWorkspacePage />} />
-        <Route path="/corpus" element={<DemoCorpusPage />} />
-        <Route path="/how-it-works" element={<HowChecksWorkPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Suspense fallback={<RouteLoadingFallback />}>
+      <Routes>
+        <Route path="/" element={<HeroPage />} />
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<DashboardOverviewPage />} />
+          <Route path="/analyze" element={<AnalyzeWorkspacePage />} />
+          <Route path="/corpus" element={<DemoCorpusPage />} />
+          <Route path="/how-it-works" element={<HowChecksWorkPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 

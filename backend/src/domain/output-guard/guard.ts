@@ -32,27 +32,27 @@ const PROHIBITED_ADVICE_PATTERNS: Array<{ code: string; pattern: RegExp }> = [
   {
     code: "PROHIBITED_DIRECT_ACTION",
     pattern:
-      /\b(buy|sell|hold|avoid|short\s+(?:it|this|the\s+stock)|go\s+long|accumulate|book\s+profit|exit\s+now|dump\s+(?:it|this)|stay\s+away\s+from)\b/i,
+      /\b(buy|sell|hold|avoid|short\s+(?:it|this|the\s+stock)|go\s+long|accumulate|book\s+profit|exit\s+now|dump\s+(?:it|this)|stay\s+away\s+from|enter\s+now|load\s+up\s+on)\b/i,
   },
   {
     code: "PROHIBITED_TARGET_OR_VALUATION",
     pattern:
-      /\b(target\s*price|price\s*target|\btarget\b|undervalued|overvalued|fair\s*value\s*is|worth\s+rs\.?\s*\d+)\b/i,
+      /\b(target\s*price|price\s*target|\btarget\b|undervalued|overvalued|fair\s*value\s*is|worth\s+rs\.?\s*\d+|cheap\s+valuation|richly\s+valued)\b/i,
   },
   {
     code: "PROHIBITED_PREDICTION",
     pattern:
-      /\b(will\s+(?:rise|fall|rally|crash|double|triple|soar|plunge|skyrocket|outperform|underperform)|guaranteed\s+(?:return|profit|gain)|sure\s*shot|safe\s+bet|multibagger)\b/i,
+      /\b(will\s+(?:rise|fall|rally|crash|double|triple|soar|plunge|skyrocket|outperform|underperform|go\s+up|go\s+down)|going\s+to\s+(?:rally|rise|fall|crash|double)|bound\s+to\s+(?:rise|double|fall)|guaranteed\s+(?:return|profit|gain)|sure\s*shot|safe\s+bet|multibagger)\b/i,
   },
   {
     code: "PROHIBITED_CONDITIONAL_OR_EUPHEMISM",
     pattern:
-      /\b(you\s+should\s+(?:invest|enter|exit|skip|pass)|we\s+recommend|good\s+(?:entry|exit)\s*point|worth\s+adding\s+to\s+your\s+portfolio|consider\s+(?:picking\s+up|entering|exiting)|smart\s+to\s+(?:enter|pass|skip)|better\s+to\s+skip|looks\s+like\s+a\s+winner|strong\s+upside\s+ahead)\b/i,
+      /\b(you\s+should\s+(?:invest|enter|exit|skip|pass|consider)|we\s+recommend|good\s+(?:entry|exit)\s*point|attractive\s+entry|worth\s+(?:adding|accumulating|picking\s+up)|consider\s+(?:picking\s+up|entering|exiting|adding)|smart\s+to\s+(?:enter|pass|skip)|better\s+to\s+skip|looks\s+like\s+a\s+winner|strong\s+upside\s+ahead|smart\s+money\s+is\s+loading|if\s+it\s+dips\s+below.{0,24}enter|only\s+invest\s+if)\b/i,
   },
   {
     code: "PROHIBITED_HINGLISH_ADVICE",
     pattern:
-      /\b(kharido|kharid\s*lo|becho|bech\s*do|le\s*lo|mat\s*lo|pakka\s*(?:badhega|girega)|paisa\s*double|rocket\s*banega|uper\s*jayega|niche\s*girega|invest\s*karo|mat\s*lagao)\b/i,
+      /\b(kharido|kharid\s*lo|kharid\s*lena|becho|bech\s*do|le\s*lo|le\s*lena\s*chahiye|mat\s*lo|pakka\s*(?:badhega|girega)|paisa\s*double|rocket\s*banega|uper\s*jayega|niche\s*girega|invest\s*karo|nivesh\s*karo|mat\s*lagao|abhi\s*mauka\s*hai)\b/i,
   },
   {
     code: "PROHIBITED_ACCUSATION",

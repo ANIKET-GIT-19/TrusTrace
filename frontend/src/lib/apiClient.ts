@@ -2,6 +2,7 @@ import type {
   BenchmarkSummary,
   ChecksResponse,
   ClaimLedger,
+  CoordinatedDemoSignalResponse,
   DemoCaseMeta,
   ExactDateTip,
   GuardedReportResponse,
@@ -9,7 +10,9 @@ import type {
   PricesResponse,
   SebiLookupResponse,
   StockLookupItem,
+  SupportedVoiceLanguage,
   TipMarkerItem,
+  VoiceReadoutResponse,
 } from "../types/api";
 
 export const API_BASE_URL =
@@ -170,4 +173,23 @@ export async function fetchBenchmarks(): Promise<BenchmarkSummary[]> {
 export async function fetchDemoCases(): Promise<DemoCaseMeta[]> {
   const res = await apiJson<{ items: DemoCaseMeta[] }>("/api/meta/demo-cases");
   return res.items;
+}
+
+export function requestVoiceReadout(params: {
+  guarded_text: string;
+  language: SupportedVoiceLanguage;
+}): Promise<VoiceReadoutResponse> {
+  return apiJson<VoiceReadoutResponse>("/api/voice/readout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+}
+
+export function fetchCoordinatedDemoSignal(
+  ticker: string
+): Promise<CoordinatedDemoSignalResponse> {
+  return apiJson<CoordinatedDemoSignalResponse>(
+    `/api/meta/coordinated-demo?ticker=${encodeURIComponent(ticker)}`
+  );
 }

@@ -1,10 +1,13 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
+import rateLimit from "express-rate-limit";
 import multer from "multer";
 import { z } from "zod";
 import type { AppEnv } from "../../core/env.js";
-import { AppError } from "../../core/errors.js";
+import { AppError, buildErrorEnvelope } from "../../core/errors.js";
+import { SnapshotVersionCache } from "../../core/snapshotCache.js";
 import type { EvidenceRepository } from "../../db/repository.js";
 import { ClaimLedgerSchema } from "../../domain/claims/parser.js";
+import { getSyntheticCoordinatedDemoSignal } from "../../domain/coordinated-demo/signal.js";
 import { classifyDisclosure } from "../../domain/disclosure/classifier.js";
 import { detectHypePhrases } from "../../domain/hype/detector.js";
 import { computeAllMarketChecks, METHODOLOGY_CONFIG_V1 } from "../../domain/market-checks/checks.js";
@@ -15,6 +18,7 @@ import {
   MAX_VIDEO_BYTES,
   runBoundedMultimodalParse,
 } from "../../integrations/multimodalParser.js";
+import { synthesizeGuardedVoiceReadout } from "../../integrations/sarvamVoice.js";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
@@ -54,16 +58,42 @@ function asyncRoute(
   };
 }
 
+const VoiceReadoutSchema = z.object({
+  guarded_text: z.string().min(1).max(600),
+  language: z.enum(["en-IN", "hi-IN", "kn-IN"]).default("en-IN"),
+});
+
 export function createAutopsyRouter(params: {
   config: AppEnv;
   repo: EvidenceRepository;
 }): Router {
   const { config, repo } = params;
   const router = Router();
+  const snapshotCache = new SnapshotVersionCache({ maxEntries: 250, defaultTtlMs: 300_000 });
+
+  const providerRateLimit = rateLimit({
+    windowMs: config.RATE_LIMIT_WINDOW_MS,
+    max: Math.min(config.RATE_LIMIT_MAX_REQUESTS, 40),
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler(req, res) {
+      res
+        .status(429)
+        .json(
+          buildErrorEnvelope(
+            "RATE_LIMITED",
+            "Too many parsing or voice requests. Please pause briefly and try again.",
+            req.requestId ?? "req_unknown",
+            true
+          )
+        );
+    },
+  });
 
   // 1. POST /api/tips/parse (JSON or multipart/form-data photo/video)
   router.post(
     "/tips/parse",
+    providerRateLimit,
     (req, res, next) => {
       if (req.is("multipart/form-data")) {
         memoryUpload.single("file")(req, res, (err: unknown) => {
@@ -235,13 +265,23 @@ export function createAutopsyRouter(params: {
 
       const bars = await repo.getPriceHistory(stock.ticker, from, to);
       const latest = bars[bars.length - 1];
+      const cacheKey = SnapshotVersionCache.buildKey({
+        namespace: "prices",
+        snapshotVersion: latest?.snapshot_id ?? "empty",
+        params: { ticker: stock.ticker, from, to },
+      });
 
-      res.status(200).json({
-        request_id: req.requestId ?? "req_unknown",
+      const cached = snapshotCache.get<Record<string, unknown>>(cacheKey);
+      if (cached) {
+        res.status(200).json({ request_id: req.requestId ?? "req_unknown", ...cached });
+        return;
+      }
+
+      const payload = {
         ticker: stock.ticker,
         company_name: stock.company_name,
         instrument_type: stock.instrument_type,
-        series_scope: "SECURITY",
+        series_scope: "SECURITY" as const,
         underlying_ticker: null,
         as_of_date: latest?.trading_date ?? null,
         source_snapshot_id: latest?.snapshot_id ?? null,
@@ -252,6 +292,12 @@ export function createAutopsyRouter(params: {
           close: Number(bar.close),
           volume: bar.volume,
         })),
+      };
+      snapshotCache.set(cacheKey, payload);
+
+      res.status(200).json({
+        request_id: req.requestId ?? "req_unknown",
+        ...payload,
       });
     })
   );
@@ -566,6 +612,37 @@ export function createAutopsyRouter(params: {
       res.status(200).json({
         request_id: req.requestId ?? "req_unknown",
         snapshots,
+      });
+    })
+  );
+
+  // 9. Optional Sarvam Voice Readout (Task 3.3 — strictly guarded text only)
+  router.post(
+    "/voice/readout",
+    providerRateLimit,
+    asyncRoute(async (req, res) => {
+      const body = VoiceReadoutSchema.parse(req.body ?? {});
+      const result = await synthesizeGuardedVoiceReadout({
+        guardedText: body.guarded_text,
+        language: body.language,
+        apiKey: config.SARVAM_API_KEY,
+      });
+      res.status(200).json({
+        request_id: req.requestId ?? "req_unknown",
+        ...result,
+      });
+    })
+  );
+
+  // 10. Optional Synthetic Coordinated-Promotion Demo Signal (Task 3.4 — strictly separate from 5 core checks)
+  router.get(
+    "/meta/coordinated-demo",
+    asyncRoute(async (req, res) => {
+      const ticker = typeof req.query.ticker === "string" ? req.query.ticker : "";
+      const signal = getSyntheticCoordinatedDemoSignal(ticker);
+      res.status(200).json({
+        request_id: req.requestId ?? "req_unknown",
+        ...signal,
       });
     })
   );

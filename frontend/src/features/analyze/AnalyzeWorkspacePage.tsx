@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   Quotes,
   ShieldCheck,
+  SpeakerHigh,
   TextAa,
   Trash,
   WarningCircle,
@@ -22,13 +23,15 @@ import { ProvenancePill } from "../../components/ui/ProvenancePill";
 import { StatusBadge, type EvidenceTone } from "../../components/ui/StatusBadge";
 import {
   buildGuardedReport,
+  fetchCoordinatedDemoSignal,
   fetchDemoCases,
   fetchStockChecks,
   lookupInfluencer,
   lookupStocks,
   parseTip,
+  requestVoiceReadout,
 } from "../../lib/apiClient";
-import type { CheckStatus, DataLabel, HypeFlag } from "../../types/api";
+import type { CheckStatus, DataLabel, HypeFlag, SupportedVoiceLanguage } from "../../types/api";
 import { PauseAndPlanGate } from "../pause-plan/PauseAndPlanGate";
 import { TipTimeMachine } from "../time-machine/TipTimeMachine";
 import { useAutopsy } from "../workflow/AutopsyContext";
@@ -126,6 +129,11 @@ export function AnalyzeWorkspacePage() {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [maxUnlocked, setMaxUnlocked] = useState<number>(1);
+  const [voiceLang, setVoiceLang] = useState<SupportedVoiceLanguage>("en-IN");
+
+  const voiceMutation = useMutation({
+    mutationFn: requestVoiceReadout,
+  });
 
   const demoCasesQuery = useQuery({
     queryKey: ["demo-cases"],
@@ -164,6 +172,12 @@ export function AnalyzeWorkspacePage() {
     if (matched) return matched.ticker;
     return state.stockName.trim().toUpperCase().replace(/\s+/g, "_");
   }, [state.resolvedTicker, state.stockName, stocksQuery.data]);
+
+  const coordinatedDemoQuery = useQuery({
+    queryKey: ["coordinated-demo", effectiveTicker],
+    queryFn: () => fetchCoordinatedDemoSignal(effectiveTicker),
+    enabled: state.activeStep >= 3 && effectiveTicker.length > 0,
+  });
 
   const sebiQuery = useQuery({
     queryKey: ["sebi-lookup", state.influencerName],
@@ -934,15 +948,68 @@ export function AnalyzeWorkspacePage() {
                       </p>
                     </div>
 
-                    <div className="border-t border-[rgba(22,26,24,0.07)] pt-2.5">
+                    <div className="space-y-2 border-t border-[rgba(22,26,24,0.07)] pt-2.5">
                       <ProvenancePill
                         label={mapDataLabel(check.data_label)}
                         asOfDate={check.as_of_date ?? undefined}
                       />
+                      <details className="text-[11.5px] text-[#6E7771]">
+                        <summary className="cursor-pointer font-semibold text-[#4A524D] hover:text-[#161A18]">
+                          Method &amp; source details
+                        </summary>
+                        <div className="mt-1.5 space-y-1 rounded-lg bg-[#FAF8F4] p-2">
+                          <p className="m-0">Method: {check.method_version}</p>
+                          <p className="m-0">Source: {check.source_name ?? "Not available"}</p>
+                          <p className="m-0 break-all">
+                            Snapshot ID: {check.source_snapshot_id ?? "None"}
+                          </p>
+                        </div>
+                      </details>
                     </div>
                   </GlassCard>
                 ))}
               </div>
+            )}
+
+            {/* Optional Synthetic Coordinated-Promotion Demo Signal (Task 3.4 — Strictly Separate from 5 Core Checks) */}
+            {coordinatedDemoQuery.data && (
+              <details className="rounded-2xl border border-[rgba(22,26,24,0.1)] bg-[rgba(255,255,255,0.68)] p-4">
+                <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 text-[14px] font-semibold text-[#161A18]">
+                  <span>
+                    Optional Demo Signal: Cross-Channel Burst Example (Separate from Core 5 Checks)
+                  </span>
+                  <StatusBadge tone="unverified" label="Synthetic / Demo Only" />
+                </summary>
+                <div className="mt-3 space-y-3 border-t border-[rgba(22,26,24,0.08)] pt-3 text-[13px] text-[#4A524D]">
+                  <p className="m-0 font-medium text-[#161A18]">
+                    {coordinatedDemoQuery.data.what_this_shows}
+                  </p>
+                  {coordinatedDemoQuery.data.events.length > 0 && (
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      {coordinatedDemoQuery.data.events.map((ev) => (
+                        <div
+                          key={`${ev.channel_label}-${ev.posted_at_iso}`}
+                          className="rounded-xl border border-[rgba(22,26,24,0.08)] bg-[#FAF8F4] p-2.5 text-[12px]"
+                        >
+                          <p className="m-0 font-semibold text-[#161A18]">{ev.channel_label}</p>
+                          <p className="tabular-nums-lining m-0 text-[#6E7771]">
+                            {ev.posted_at_iso}
+                          </p>
+                          <p className="tabular-nums-lining m-0 text-[#4A524D]">
+                            Phrase overlap: {Math.round(ev.phrase_overlap_jaccard * 100)}% ·
+                            Synthetic
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <ul className="m-0 space-y-1 pl-4 text-[12px] text-[#6E7771]">
+                    {coordinatedDemoQuery.data.limitations.map((lim) => (
+                      <li key={lim}>{lim}</li>
+                    ))}
+                  </ul>
+                </div>
+              </details>
             )}
           </section>
 
@@ -1049,6 +1116,68 @@ export function AnalyzeWorkspacePage() {
                 <p className="m-0 rounded-xl border border-[rgba(74,124,100,0.2)] bg-[#E6F2EC]/60 px-4 py-3 text-[13px] font-medium text-[#1F4D3A]">
                   {reportQuery.data.mandatory_disclaimer}
                 </p>
+
+                {/* Optional Guarded Voice Readout (Task 3.3 — Reads Guarded Text Only) */}
+                <div className="flex flex-col gap-3 rounded-2xl border border-[rgba(22,26,24,0.08)] bg-white/80 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2 text-[13.5px] font-semibold text-[#161A18]">
+                      <SpeakerHigh size={17} weight="duotone" className="text-[#4A7C64]" aria-hidden="true" />
+                      <span>Optional Voice Readout (Guarded Text Only)</span>
+                    </div>
+                    <p className="m-0 text-[12px] text-[#6E7771]">
+                      Reads only the already-guarded Information Verdict above. Voice outages never
+                      affect the text analysis.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label htmlFor="voice-language-select" className="sr-only">
+                      Voice readout language
+                    </label>
+                    <select
+                      id="voice-language-select"
+                      value={voiceLang}
+                      onChange={(e) => setVoiceLang(e.target.value as SupportedVoiceLanguage)}
+                      className="h-10 rounded-xl border border-[rgba(22,26,24,0.12)] bg-white px-3 text-[13px] font-medium text-[#161A18]"
+                    >
+                      <option value="en-IN">English (India)</option>
+                      <option value="hi-IN">Hindi (हिन्दी)</option>
+                      <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+                    </select>
+                    <Button
+                      variant="secondary"
+                      className="h-10 px-4 text-[13px]"
+                      disabled={voiceMutation.isPending}
+                      onClick={() => {
+                        const guardedSummary = reportQuery.data.sections
+                          .map((s) => s.sentence)
+                          .join(" ");
+                        voiceMutation.mutate({
+                          guarded_text: guardedSummary,
+                          language: voiceLang,
+                        });
+                      }}
+                    >
+                      {voiceMutation.isPending ? "Preparing..." : "Play Summary"}
+                    </Button>
+                  </div>
+                </div>
+
+                {voiceMutation.data && (
+                  <div
+                    aria-live="polite"
+                    className="rounded-xl border border-[rgba(22,26,24,0.08)] bg-[#FAF8F4] px-3.5 py-2.5 text-[12.5px] text-[#4A524D]"
+                  >
+                    <p className="m-0">{voiceMutation.data.message}</p>
+                    {voiceMutation.data.status === "READY" && voiceMutation.data.audio_base64 && (
+                      <audio
+                        controls
+                        className="mt-2 w-full"
+                        src={`data:${voiceMutation.data.mime_type ?? "audio/wav"};base64,${voiceMutation.data.audio_base64}`}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </GlassCard>

@@ -36,6 +36,12 @@ export function DashboardLayout() {
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-[#F3EFE7] p-2.5 sm:p-5 lg:p-7">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-full focus:bg-[#161A18] focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-[#FAF8F4]"
+      >
+        Skip to main content
+      </a>
       {/* Verbatim Wayglim WebGL2 animated gradient background from ui-ux/DashBoardBackground.jsx */}
       <DashBoardBackground />
 
@@ -138,7 +144,11 @@ export function DashboardLayout() {
         </aside>
 
         {/* Fluid Main Workspace */}
-        <main className="flex min-w-0 flex-1 flex-col justify-between gap-6 p-4 sm:p-6 lg:p-7">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex min-w-0 flex-1 flex-col justify-between gap-6 p-4 sm:p-6 lg:p-7"
+        >
           <div className="space-y-6">
             <Outlet />
           </div>

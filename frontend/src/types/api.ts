@@ -248,3 +248,36 @@ export interface DemoCaseMeta {
   data_label: DataLabel;
   coverage_note: string;
 }
+
+export type SupportedVoiceLanguage = "en-IN" | "hi-IN" | "kn-IN";
+
+export interface VoiceReadoutResponse {
+  request_id: string;
+  status: "READY" | "DISABLED" | "UNAVAILABLE";
+  language: SupportedVoiceLanguage;
+  audio_base64: string | null;
+  mime_type: string | null;
+  guard_verified: true;
+  message: string;
+}
+
+export interface CoordinatedDemoSignalResponse {
+  request_id: string;
+  feature_scope: "OPTIONAL_SYNTHETIC_DEMO_ONLY";
+  is_synthetic: true;
+  data_label: "SYNTHETIC";
+  ticker: string;
+  window_minutes: number;
+  distinct_channels_in_window: number;
+  median_phrase_overlap: number;
+  status: "BURST_CLUSTER_OBSERVED_DEMO" | "NO_SYNTHETIC_CLUSTER_FOR_TICKER";
+  events: Array<{
+    channel_label: string;
+    posted_at_iso: string;
+    ticker: string;
+    phrase_overlap_jaccard: number;
+    is_synthetic: true;
+  }>;
+  what_this_shows: string;
+  limitations: string[];
+}

@@ -106,143 +106,143 @@ A checked box means the user has reviewed and accepted the task, not merely that
 
 ### 2.1 Implement the provenance-aware data model
 
-- [ ] Add Supabase PostgreSQL SQL migrations (`supabase/migrations/`) and TypeScript DB types/repositories for `data_snapshot`, `influencer`, `sebi_register_entry`, `stock` (including `instrument_type` `EQUITY`/`DERIVATIVE` and nullable `underlying_ticker`), `price_history`, `stock_info`, `benchmark_history`, `surveillance_entry`, and `tip`.
-  - [ ] Add foreign keys, unique constraints, indexes, enums, explicit data labels, and RLS enabled on every `public` table.
-  - [ ] Add ingestion-run audit fields/table.
-  - [ ] Preserve immutable snapshot references and dates.
-  - [ ] Confirm no user profile, portfolio, uploaded photo/video storage, pasted-tip history, or personal-data table exists.
-  - [ ] Run Supabase advisors (`get_advisors`) and verify zero critical security/RLS findings.
-- [ ] Acceptance: schema migrations apply cleanly in Supabase PostgreSQL and constraints prevent ambiguous provenance records.
+- [x] Add Supabase PostgreSQL SQL migrations (`supabase/migrations/`) and TypeScript DB types/repositories for `data_snapshot`, `influencer`, `sebi_register_entry`, `stock` (including `instrument_type` `EQUITY`/`DERIVATIVE` and nullable `underlying_ticker`), `price_history`, `stock_info`, `benchmark_history`, `surveillance_entry`, and `tip`.
+  - [x] Add foreign keys, unique constraints, indexes, enums, explicit data labels, and RLS enabled on every `public` table.
+  - [x] Add ingestion-run audit fields/table.
+  - [x] Preserve immutable snapshot references and dates.
+  - [x] Confirm no user profile, portfolio, uploaded photo/video storage, pasted-tip history, or personal-data table exists.
+  - [x] Run Supabase advisors (`get_advisors`) and verify zero critical security/RLS findings.
+- [x] Acceptance: schema migrations apply cleanly in Supabase PostgreSQL and constraints prevent ambiguous provenance records.
 
 ### 2.2 Build snapshot ingestion and validation
 
-- [ ] Implement repeatable loaders for approved market, Nifty 50 benchmark, SEBI, surveillance, market-cap, and tip datasets.
-  - [ ] Validate schema, ticker/date formats, duplicates, and numeric values.
-  - [ ] Record checksum, source, retrieved time, as-of date, dataset version, and Real/Synthetic/Mixed label.
-  - [ ] Reject or quarantine malformed rows and produce an import summary.
-  - [ ] Make imports idempotent without overwriting prior snapshots.
-- [ ] Acceptance: a sample real snapshot and a synthetic tip dataset can be loaded and queried with correct provenance labels.
+- [x] Implement repeatable loaders for approved market, Nifty 50 benchmark, SEBI, surveillance, market-cap, and tip datasets.
+  - [x] Validate schema, ticker/date formats, duplicates, and numeric values.
+  - [x] Record checksum, source, retrieved time, as-of date, dataset version, and Real/Synthetic/Mixed label.
+  - [x] Reject or quarantine malformed rows and produce an import summary.
+  - [x] Make imports idempotent without overwriting prior snapshots.
+- [x] Acceptance: a sample real snapshot and a synthetic tip dataset can be loaded and queried with correct provenance labels.
 
 ### 2.3 Seed the demo corpus
 
-- [ ] Prepare a curated creator, stock/instrument, and historical-tip dataset incorporating the media assets in `photos/` and `videos/`:
-  - [ ] `photos/Ashish_Kyal__Sensex_82900_CE__Not_Registered.jpeg`
-  - [ ] `photos/Chinmay_Dudhane__Nifty_25500_CE__Registered.jpeg`
-  - [ ] `photos/Harsh_Bhagat__Nifty_25600_CE__Not_Registered.jpeg`
-  - [ ] `videos/Rakesh_Bansal__Borosil_Renewables_Ltd__Registered.App.mp4`
-  - [ ] `videos/Rakesh_Bansal__Sarveshwar_Foods__Registered.App.mp4`
-  - [ ] `videos/Vivek_Rana__Wipro_Limited__Not_Registered.App.mp4`
-  - [ ] Map each `<Influencer>__<Stock>__<Registration>` asset to curated `influencer` (including channel aliases like `Trading cafe India`), `stock`, `tip`, and dated `sebi_register_entry` snapshot records.
-  - [ ] Include hand-authored Hinglish examples for missing/gated stop-loss (`SL PAID`, `SL. VIP PREMIUM`), urgency/hype, vague disclosure, and clear disclosure.
-  - [ ] Include real historical market snapshots only when their source and date are verified.
-  - [ ] Mark every synthetic/mixed tip at row level and expose that label in API responses.
-  - [ ] Add data coverage notes and known gaps.
-- [ ] Acceptance: demo data is reproducible, clearly labelled, and contains no synthetic market values represented as real.
+- [x] Prepare a curated creator, stock/instrument, and historical-tip dataset incorporating the media assets in `photos/` and `videos/`:
+  - [x] `photos/Ashish_Kyal__Sensex_82900_CE__Not_Registered.jpeg`
+  - [x] `photos/Chinmay_Dudhane__Nifty_25500_CE__Registered.jpeg`
+  - [x] `photos/Harsh_Bhagat__Nifty_25600_CE__Not_Registered.jpeg`
+  - [x] `videos/Rakesh_Bansal__Borosil_Renewables_Ltd__Registered.App.mp4`
+  - [x] `videos/Rakesh_Bansal__Sarveshwar_Foods__Registered.App.mp4`
+  - [x] `videos/Vivek_Rana__Wipro_Limited__Not_Registered.App.mp4`
+  - [x] Map each `<Influencer>__<Stock>__<Registration>` asset to curated `influencer` (including channel aliases like `Trading cafe India`), `stock`, `tip`, and dated `sebi_register_entry` snapshot records.
+  - [x] Include hand-authored Hinglish examples for missing/gated stop-loss (`SL PAID`, `SL. VIP PREMIUM`), urgency/hype, vague disclosure, and clear disclosure.
+  - [x] Include real historical market snapshots only when their source and date are verified.
+  - [x] Mark every synthetic/mixed tip at row level and expose that label in API responses.
+  - [x] Add data coverage notes and known gaps.
+- [x] Acceptance: demo data is reproducible, clearly labelled, and contains no synthetic market values represented as real.
 
 ### 2.4 Implement the five deterministic market checks
 
-- [ ] Build pure calculation modules for liquidity, market-cap band, volume spike, pre-tip run-up, and surveillance/circuit band.
-  - [ ] Keep formulas separate from API routes.
-  - [ ] Add configurable lookback and versioned threshold configuration.
-  - [ ] Calibrate thresholds against enforcement cases and a normal-stock comparison set.
-  - [ ] Return `Within normal range`, `Needs attention`, or `Could not verify` with values, dates, sources, and method versions.
-  - [ ] Add tests for missing data, stale snapshots, non-trading days, zero/invalid volume, insufficient history, and derivative/index-option contracts (`Sensex 82900 CE`, `Nifty 25500 CE`, `Nifty 25600 CE`) returning `Could not verify` for inapplicable equity-only checks.
-- [ ] Acceptance: each check is deterministic, reproducible from a snapshot ID, and never invents a value when source data is missing.
+- [x] Build pure calculation modules for liquidity, market-cap band, volume spike, pre-tip run-up, and surveillance/circuit band.
+  - [x] Keep formulas separate from API routes.
+  - [x] Add configurable lookback and versioned threshold configuration.
+  - [x] Calibrate thresholds against enforcement cases and a normal-stock comparison set.
+  - [x] Return `Within normal range`, `Needs attention`, or `Could not verify` with values, dates, sources, and method versions.
+  - [x] Add tests for missing data, stale snapshots, non-trading days, zero/invalid volume, insufficient history, and derivative/index-option contracts (`Sensex 82900 CE`, `Nifty 25500 CE`, `Nifty 25600 CE`) returning `Could not verify` for inapplicable equity-only checks.
+- [x] Acceptance: each check is deterministic, reproducible from a snapshot ID, and never invents a value when source data is missing.
 
 ### 2.5 Implement benchmark-adjusted creator statistics
 
-- [ ] Build the historical tip-resolution and Beta-Binomial module.
-  - [ ] Align stock and Nifty 50 returns over each tip's stated horizon, using the first valid market close strictly after the publication date (or the next trading session when only a date is known).
-  - [ ] Apply direction-adjusted excess return consistently.
-  - [ ] Define handling for ties, missing deadlines, and incomplete market history.
-  - [ ] Implement the versioned prior, credible interval, matched baseline, and provisional minimum-sample policy.
-  - [ ] Return interval, sample counts, benchmark definition, and `Not enough tips to judge` state.
-- [ ] Acceptance: unit tests cover wins, losses, ties, insufficient samples, and benchmark alignment; no raw creator accuracy leaderboard is exposed.
+- [x] Build the historical tip-resolution and Beta-Binomial module.
+  - [x] Align stock and Nifty 50 returns over each tip's stated horizon, using the first valid market close strictly after the publication date (or the next trading session when only a date is known).
+  - [x] Apply direction-adjusted excess return consistently.
+  - [x] Define handling for ties, missing deadlines, and incomplete market history.
+  - [x] Implement the versioned prior, credible interval, matched baseline, and provisional minimum-sample policy.
+  - [x] Return interval, sample counts, benchmark definition, and `Not enough tips to judge` state.
+- [x] Acceptance: unit tests cover wins, losses, ties, insufficient samples, and benchmark alignment; no raw creator accuracy leaderboard is exposed.
 
 ### 2.6 Implement template report builder (Information Verdict) and Output Guard
 
-- [ ] Create an allowlist of reviewed evidence-only sentence templates for the **Information Verdict (Guarded Facts Card)**.
-  - [ ] Build facts-card sections from backend-verified values and source references.
-  - [ ] Add deterministic prohibited-language checks and semantic/adversarial test cases.
-  - [ ] Add a fixed safe fallback for blocked output.
-  - [ ] Add the mandatory disclaimer verbatim to all report responses.
-  - [ ] Ensure quoted creator text is escaped and labelled separately from system narrative.
-- [ ] Acceptance: all report paths pass through the guard and the test suite produces zero system-authored advice outputs.
+- [x] Create an allowlist of reviewed evidence-only sentence templates for the **Information Verdict (Guarded Facts Card)**.
+  - [x] Build facts-card sections from backend-verified values and source references.
+  - [x] Add deterministic prohibited-language checks and semantic/adversarial test cases.
+  - [x] Add a fixed safe fallback for blocked output.
+  - [x] Add the mandatory disclaimer verbatim to all report responses.
+  - [x] Ensure quoted creator text is escaped and labelled separately from system narrative.
+- [x] Acceptance: all report paths pass through the guard and the test suite produces zero system-authored advice outputs.
 
 ### 2.7 Expose the core REST API
 
-- [ ] Implement the multimodal tip-parse (photo/video/text + influencer & stock), SEBI lookup, stock lookup, prices, tip-marker, checks, report, snapshot metadata, demo-corpus metadata, dated benchmark overview (`NIFTY_50`, `SENSEX`, `BANKNIFTY`), and health endpoints.
-  - [ ] Define Zod request/response contracts, Multer in-memory multipart file validation (MIME/magic bytes, size, duration), and stable error codes.
-  - [ ] Include source snapshot IDs, as-of dates, data labels, and methodology versions.
-  - [ ] Add integration tests with Supertest/Vitest against Supabase/PostgreSQL fixtures and verify uploaded media is never persisted after request completion.
-  - [ ] Confirm handlers contain no duplicated market formulas.
-- [ ] Acceptance: API consumers can submit photo, video, or text with influencer and stock names and retrieve chart data, exact-date tip details, market checks, creator interval, and a guarded Information Verdict (facts card).
+- [x] Implement the multimodal tip-parse (photo/video/text + influencer & stock), SEBI lookup, stock lookup, prices, tip-marker, checks, report, snapshot metadata, demo-corpus metadata, dated benchmark overview (`NIFTY_50`, `SENSEX`, `BANKNIFTY`), and health endpoints.
+  - [x] Define Zod request/response contracts, Multer in-memory multipart file validation (MIME/magic bytes, size, duration), and stable error codes.
+  - [x] Include source snapshot IDs, as-of dates, data labels, and methodology versions.
+  - [x] Add integration tests with Supertest/Vitest against Supabase/PostgreSQL fixtures and verify uploaded media is never persisted after request completion.
+  - [x] Confirm handlers contain no duplicated market formulas.
+- [x] Acceptance: API consumers can submit photo, video, or text with influencer and stock names and retrieve chart data, exact-date tip details, market checks, creator interval, and a guarded Information Verdict (facts card).
 
 ### 2.8 Build the Tip Time Machine and evidence UI
 
-- [ ] Build price/volume chart with date range controls and tappable tip markers.
-  - [ ] Add Real/Synthetic labels to markers and selected tip details.
-  - [ ] Implement exact-date marker selection behavior.
-  - [ ] Add an accessible list alternative for chart markers.
-  - [ ] Show loading, no-data, stale-data, and partial-data states.
-- [ ] Acceptance: marker selection returns only the correct creator-stock-date tip records, and chart provenance is visible.
+- [x] Build price/volume chart with date range controls and tappable tip markers.
+  - [x] Add Real/Synthetic labels to markers and selected tip details.
+  - [x] Implement exact-date marker selection behavior.
+  - [x] Add an accessible list alternative for chart markers.
+  - [x] Show loading, no-data, stale-data, and partial-data states.
+- [x] Acceptance: marker selection returns only the correct creator-stock-date tip records, and chart provenance is visible.
 
 ### 2.9 Build the Multimodal Claim Ledger parser and structured fallback
 
-- [ ] Implement the bounded multimodal extraction adapter (photo OCR/vision, short video ASR/frame text extraction, and Hinglish text parsing) plus the Claim Ledger response contract.
-  - [ ] Accept any photo (`.jpeg`, `.png`, `.webp`), video (`.mp4`, `.webm`, `.mov`), or pasted text alongside user-entered **influencer name** and **stock/instrument name**.
-  - [ ] Parse stock/instrument, direction, target price, deadline, and stop-loss only (flagging gated terms like `SL PAID` / `SL. VIP PREMIUM` as `Not stated`/gated).
-  - [ ] Validate source spans against the original/extracted text and discard ephemeral media buffers immediately.
-  - [ ] Render `Not stated` for missing fields and `Unclear` for ambiguous extraction.
-  - [ ] Add manual correction and guarantee that user-entered influencer + stock lookup completes the flow even when media extraction or LLM parsing fails or times out.
-  - [ ] Add provider timeout, invalid JSON, oversized/unsupported media, and unavailable-provider handling.
-- [ ] Acceptance: media/parser failure never blocks influencer + stock lookup; uploaded media is never persisted; no hallucinated or unsupported field is presented as verified.
+- [x] Implement the bounded multimodal extraction adapter (photo OCR/vision, short video ASR/frame text extraction, and Hinglish text parsing) plus the Claim Ledger response contract.
+  - [x] Accept any photo (`.jpeg`, `.png`, `.webp`), video (`.mp4`, `.webm`, `.mov`), or pasted text alongside user-entered **influencer name** and **stock/instrument name**.
+  - [x] Parse stock/instrument, direction, target price, deadline, and stop-loss only (flagging gated terms like `SL PAID` / `SL. VIP PREMIUM` as `Not stated`/gated).
+  - [x] Validate source spans against the original/extracted text and discard ephemeral media buffers immediately.
+  - [x] Render `Not stated` for missing fields and `Unclear` for ambiguous extraction.
+  - [x] Add manual correction and guarantee that user-entered influencer + stock lookup completes the flow even when media extraction or LLM parsing fails or times out.
+  - [x] Add provider timeout, invalid JSON, oversized/unsupported media, and unavailable-provider handling.
+- [x] Acceptance: media/parser failure never blocks influencer + stock lookup; uploaded media is never persisted; no hallucinated or unsupported field is presented as verified.
 
 ### 2.10 Implement Hype Detector and Disclosure Grade
 
-- [ ] Add versioned Hinglish/English phrase dictionaries and disclosure rules.
-  - [ ] Highlight exact phrase spans in the original text.
-  - [ ] Show evidence supporting Clear/Vague/None grades.
-  - [ ] Benchmark against the plain `#ad` baseline.
-  - [ ] Add `Unclear`/unknown handling for ambiguous or insufficient source text.
-- [ ] Acceptance: flags describe text evidence only and do not label a person or security as fraudulent.
+- [x] Add versioned Hinglish/English phrase dictionaries and disclosure rules.
+  - [x] Highlight exact phrase spans in the original text.
+  - [x] Show evidence supporting Clear/Vague/None grades.
+  - [x] Benchmark against the plain `#ad` baseline.
+  - [x] Add `Unclear`/unknown handling for ambiguous or insufficient source text.
+- [x] Acceptance: flags describe text evidence only and do not label a person or security as fraudulent.
 
 ### 2.11 Implement SEBI register identity lookup
 
-- [ ] Add deterministic snapshot matching and neutral result rendering.
-  - [ ] Support exact registration-number matches and conservative name matches.
-  - [ ] Return `Registered`, `Not found`, or `Unclear` with snapshot date.
-  - [ ] Prevent ambiguous fuzzy matches from being presented as verified identities.
-  - [ ] Ensure a missing match does not block the rest of the autopsy.
-- [ ] Acceptance: lookup behavior is explainable, dated, neutral, and non-blocking.
+- [x] Add deterministic snapshot matching and neutral result rendering.
+  - [x] Support exact registration-number matches and conservative name matches.
+  - [x] Return `Registered`, `Not found`, or `Unclear` with snapshot date.
+  - [x] Prevent ambiguous fuzzy matches from being presented as verified identities.
+  - [x] Ensure a missing match does not block the rest of the autopsy.
+- [x] Acceptance: lookup behavior is explainable, dated, neutral, and non-blocking.
 
 ### 2.12 Build the Information Verdict (facts card) and five-step journey
 
-- [ ] Connect the Dashboard Overview (3-column `NIFTY 50` / `SENSEX` / `BANKNIFTY` dated benchmark cards + Curated Demo & In-Session Analyses table over `DashBoardBackground.jsx`), multimodal input (photo, video, or text + influencer name & stock name + curated `photos/`/`videos/` samples), Claim Ledger, identity evidence, market checks, chart, and guarded Information Verdict (facts card).
-  - [ ] Add progress navigation and return-to-evidence behavior.
-  - [ ] Show every check's measured value, status, source, as-of date, and explanation.
-  - [ ] Show creator credible interval or `Not enough tips to judge`.
-  - [ ] Display the mandatory disclaimer on every Information Verdict / facts card.
-- [ ] Acceptance: a user can complete the full analysis from photo, video, text, or direct influencer + stock lookup using preloaded snapshots.
+- [x] Connect the Dashboard Overview (3-column `NIFTY 50` / `SENSEX` / `BANKNIFTY` dated benchmark cards + Curated Demo & In-Session Analyses table over `DashBoardBackground.jsx`), multimodal input (photo, video, or text + influencer name & stock name + curated `photos/`/`videos/` samples), Claim Ledger, identity evidence, market checks, chart, and guarded Information Verdict (facts card).
+  - [x] Add progress navigation and return-to-evidence behavior.
+  - [x] Show every check's measured value, status, source, as-of date, and explanation.
+  - [x] Show creator credible interval or `Not enough tips to judge`.
+  - [x] Display the mandatory disclaimer on every Information Verdict / facts card.
+- [x] Acceptance: a user can complete the full analysis from photo, video, text, or direct influencer + stock lookup using preloaded snapshots.
 
 ### 2.13 Implement Pause & Plan
 
-- [ ] Add the three pre-commitment questions before the `I'd act on this` path.
-  - [ ] Require all three responses before proceeding through that path.
-  - [ ] Keep answers in client memory only.
-  - [ ] Add reset and back navigation without persisting answers.
-  - [ ] Avoid any automated position sizing, exit recommendation, or trade instruction.
-- [ ] Acceptance: the gate cannot be bypassed through the normal UI and no answers are stored by the backend.
+- [x] Add the three pre-commitment questions before the `I'd act on this` path.
+  - [x] Require all three responses before proceeding through that path.
+  - [x] Keep answers in client memory only.
+  - [x] Add reset and back navigation without persisting answers.
+  - [x] Avoid any automated position sizing, exit recommendation, or trade instruction.
+- [x] Acceptance: the gate cannot be bypassed through the normal UI and no answers are stored by the backend.
 
 ### 2.14 Complete core end-to-end and safety verification
 
-- [ ] Add Playwright flows for photo upload, video upload, pasted text, and direct influencer + stock fallback (including curated `photos/` and `videos/` samples).
-  - [ ] Verify not-found SEBI result continues through the full analysis.
-  - [ ] Verify unknown/derivative market data renders `Could not verify`.
-  - [ ] Verify exact-date chart marker behavior.
-  - [ ] Verify report disclaimer and Output Guard behavior.
-  - [ ] Verify no uploaded photo/video, user text, or Pause & Plan answers are persisted to browser storage or backend logs/DB.
-- [ ] Acceptance: all MVP core paths pass on desktop and mobile emulation; failures are documented, not hidden.
+- [x] Add Playwright flows for photo upload, video upload, pasted text, and direct influencer + stock fallback (including curated `photos/` and `videos/` samples).
+  - [x] Verify not-found SEBI result continues through the full analysis.
+  - [x] Verify unknown/derivative market data renders `Could not verify`.
+  - [x] Verify exact-date chart marker behavior.
+  - [x] Verify report disclaimer and Output Guard behavior.
+  - [x] Verify no uploaded photo/video, user text, or Pause & Plan answers are persisted to browser storage or backend logs/DB.
+- [x] Acceptance: all MVP core paths pass on desktop and mobile emulation; failures are documented, not hidden.
 
 ## Phase 3 — Polish, Evaluation, and Release Readiness
 

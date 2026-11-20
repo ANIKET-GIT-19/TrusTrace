@@ -140,12 +140,22 @@ export function TipTimeMachine({
       )}
 
       {pricesQuery.isError && (
-        <div className="rounded-2xl border border-[rgba(22,26,24,0.09)] bg-[#EEF1F4] p-5 text-[14px] text-[#4E5964]">
+        <div
+          role="alert"
+          className="space-y-2 rounded-2xl border border-[rgba(22,26,24,0.09)] bg-[#EEF1F4] p-5 text-[14px] text-[#4E5964]"
+        >
           <StatusBadge tone="unverified" label="Could not verify" />
           <p className="mt-2 mb-0">
             Historical price series could not be loaded for {ticker}. No placeholder prices were
             invented.
           </p>
+          <button
+            type="button"
+            onClick={() => void pricesQuery.refetch()}
+            className="mt-2 inline-flex h-9 cursor-pointer items-center rounded-full border border-[rgba(22,26,24,0.14)] bg-white px-3.5 text-[12.5px] font-semibold text-[#161A18] hover:bg-[#FAF8F4]"
+          >
+            Retry loading snapshot
+          </button>
         </div>
       )}
 
@@ -159,7 +169,14 @@ export function TipTimeMachine({
       )}
 
       {!pricesQuery.isLoading && series.length > 0 && (
-        <div className="h-[270px] w-full rounded-2xl border border-[rgba(22,26,24,0.07)] bg-white/85 p-3">
+        <>
+          <p className="sr-only">
+            Price and volume chart for {pricesQuery.data?.company_name ?? ticker} from{" "}
+            {series[0]?.trading_date} to {series[series.length - 1]?.trading_date}. Latest close:{" "}
+            {series[series.length - 1]?.close}. {markersQuery.data?.length ?? 0} historical tip
+            markers available in the accessible list below.
+          </p>
+          <div className="h-[270px] w-full rounded-2xl border border-[rgba(22,26,24,0.07)] bg-white/85 p-3">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={series} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
               <defs>
@@ -223,6 +240,7 @@ export function TipTimeMachine({
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+        </>
       )}
 
       {/* Accessible Keyboard-Operable Tip Marker List Alternative */}

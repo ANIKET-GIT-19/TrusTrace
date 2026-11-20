@@ -40,11 +40,11 @@ describe("Tip Autopsy Phase 1 & 2 Frontend Guardrails", () => {
     expect(screen.getAllByAltText(/Illustrative finfluencer/i).length).toBeGreaterThanOrEqual(5);
   });
 
-  it("renders the compliant frosted dashboard shell without prohibited mockup labels", () => {
+  it("renders the compliant frosted dashboard shell without prohibited mockup labels", async () => {
     renderRoute("/dashboard");
 
+    expect(await screen.findByText("Dated Market Snapshots · NSE / BSE")).toBeInTheDocument();
     expect(screen.getByTestId("wayglim-bg-stub")).toBeInTheDocument();
-    expect(screen.getByText("Dated Market Snapshots · NSE / BSE")).toBeInTheDocument();
     expect(screen.getByText(CORE_PRODUCT_RULE)).toBeInTheDocument();
     expect(screen.getByText(MANDATORY_DISCLAIMER)).toBeInTheDocument();
     expect(screen.getByText("NIFTY 50")).toBeInTheDocument();
