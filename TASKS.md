@@ -32,75 +32,75 @@ A checked box means the user has reviewed and accepted the task, not merely that
 
 ### 1.2 Create the repository scaffold
 
-- [ ] Create the monorepo folders for `frontend/`, `backend/`, `supabase/`, and `docs/`.
-  - [ ] Add only the minimal package and project manifests needed for the selected stack.
-  - [ ] Pin Node.js runtime versions and add dependency lockfiles.
-  - [ ] Add `.gitignore` rules for dependencies, build output, local databases, and secrets.
-  - [ ] Add `.env.example` containing key names and safe example values only.
-- [ ] Acceptance: a clean clone can install dependencies without committing secrets or generated data.
+- [x] Create the monorepo folders for `frontend/`, `backend/`, `supabase/`, and `docs/`.
+  - [x] Add only the minimal package and project manifests needed for the selected stack.
+  - [x] Pin Node.js runtime versions and add dependency lockfiles.
+  - [x] Add `.gitignore` rules for dependencies, build output, local databases, and secrets.
+  - [x] Add `.env.example` containing key names and safe example values only.
+- [x] Acceptance: a clean clone can install dependencies without committing secrets or generated data.
 
 ### 1.3 Establish frontend foundation
 
-- [ ] Bootstrap React + TypeScript + Vite.
-  - [ ] Enable strict TypeScript checking (with JSX/declaration support to import `ui-ux/DashBoardBackground.jsx` verbatim).
-  - [ ] Configure Tailwind and the approved design tokens from `DESIGN.md`.
-  - [ ] Copy `ui-ux/DashBoardBackground.jsx` verbatim into `frontend/src/components/` without modifying its Wayglim/Paper Shaders engine.
-  - [ ] Add routing and the responsive application shell.
-  - [ ] Add lint, typecheck, and test scripts.
-- [ ] Acceptance: the frontend runs locally, renders an empty Tip Autopsy shell, and passes lint/typecheck/build.
+- [x] Bootstrap React + TypeScript + Vite.
+  - [x] Enable strict TypeScript checking (with JSX/declaration support to import `ui-ux/DashBoardBackground.jsx` verbatim).
+  - [x] Configure Tailwind and the approved design tokens from `DESIGN.md`.
+  - [x] Copy `ui-ux/DashBoardBackground.jsx` verbatim into `frontend/src/components/` without modifying its Wayglim/Paper Shaders engine.
+  - [x] Add routing and the responsive application shell.
+  - [x] Add lint, typecheck, and test scripts.
+- [x] Acceptance: the frontend runs locally, renders an empty Tip Autopsy shell, and passes lint/typecheck/build.
 
 ### 1.4 Establish backend foundation
 
-- [ ] Bootstrap Node.js + Express + TypeScript project tooling.
-  - [ ] Add Zod-validated environment configuration.
-  - [ ] Add a health endpoint and consistent API error envelope.
-  - [ ] Configure ESLint, TypeScript (`tsc --noEmit`), Vitest, Supertest, and test settings.
-  - [ ] Add request IDs and safe structured logging with input redaction.
-- [ ] Acceptance: the backend starts locally, `/api/health` responds, and baseline tests/lint/type checks pass.
+- [x] Bootstrap Node.js + Express + TypeScript project tooling.
+  - [x] Add Zod-validated environment configuration.
+  - [x] Add a health endpoint and consistent API error envelope.
+  - [x] Configure ESLint, TypeScript (`tsc --noEmit`), Vitest, Supertest, and test settings.
+  - [x] Add request IDs and safe structured logging with input redaction.
+- [x] Acceptance: the backend starts locally, `/api/health` responds, and baseline tests/lint/type checks pass.
 
 ### 1.5 Establish Supabase PostgreSQL and migrations
 
-- [ ] Connect the target Supabase project (via Supabase MCP / environment config) and initialize `supabase/migrations/`.
-  - [ ] Configure server-side Supabase / PostgreSQL connectivity (`@supabase/supabase-js` service role and/or `pg`) with health check verification.
-  - [ ] Add a first baseline SQL migration and verify migration tracking.
-  - [ ] Run Supabase advisors (`get_advisors`) and verify RLS posture on `public` tables.
-- [ ] Acceptance: the Express backend connects to Supabase PostgreSQL, baseline migrations apply cleanly, and `/api/health` reports database readiness.
+- [x] Connect the target Supabase project (via Supabase MCP / environment config) and initialize `supabase/migrations/`.
+  - [x] Configure server-side Supabase / PostgreSQL connectivity (`@supabase/supabase-js` service role and/or `pg`) with health check verification.
+  - [x] Add a first baseline SQL migration and verify migration tracking.
+  - [x] Run Supabase advisors (`get_advisors`) and verify RLS posture on `public` tables.
+- [x] Acceptance: the Express backend connects to Supabase PostgreSQL, baseline migrations apply cleanly, and `/api/health` reports database readiness.
 
 ### 1.6 Add quality gates and CI
 
-- [ ] Configure CI for frontend and backend.
-  - [ ] Run frontend lint, typecheck, unit tests, and production build.
-  - [ ] Run backend ESLint, TypeScript typecheck, Vitest tests, and build.
-  - [ ] Add dependency and secret scanning where supported.
-  - [ ] Fail the pipeline on test, lint, or type errors.
-- [ ] Acceptance: CI runs on pull requests and reports failures clearly.
+- [x] Configure CI for frontend and backend.
+  - [x] Run frontend lint, typecheck, unit tests, and production build.
+  - [x] Run backend ESLint, TypeScript typecheck, Vitest tests, and build.
+  - [x] Add dependency and secret scanning where supported.
+  - [x] Fail the pipeline on test, lint, or type errors.
+- [x] Acceptance: CI runs on pull requests and reports failures clearly.
 
 ### 1.7 Create deployment foundations
 
-- [ ] Connect frontend preview deployment to Netlify.
-  - [ ] Configure production build output and public API base URL.
-  - [ ] Restrict deployment environment variables to public client values.
-- [ ] Connect backend preview deployment to Render.
-  - [ ] Configure build/start commands, health check, and secret environment variables (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, etc.).
-  - [ ] Ensure staging/preview uses an isolated Supabase database/branch rather than production.
-- [ ] Acceptance: preview frontend can call the staging backend over HTTPS; production is not modified by this task.
+- [x] Connect frontend preview deployment to Netlify.
+  - [x] Configure production build output and public API base URL.
+  - [x] Restrict deployment environment variables to public client values.
+- [x] Connect backend preview deployment to Render.
+  - [x] Configure build/start commands, health check, and secret environment variables (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, etc.).
+  - [x] Ensure staging/preview uses an isolated Supabase database/branch rather than production.
+- [x] Acceptance: preview frontend can call the staging backend over HTTPS; production is not modified by this task.
 
 ### 1.8 Finalize data-source inventory and methodology plan
 
-- [ ] Document intended NSE/BSE, SEBI, enforcement-order, and curated tip/media corpus inputs (`photos/` and `videos/`).
-  - [ ] Record source URL/provider, retrieval method, access date, usage terms, and expected fields.
-  - [ ] Confirm whether historical price, volume, market cap, circuit-band, and ASM/GSM snapshots are available for equities (`Borosil Renewables Ltd`, `Sarveshwar Foods`, `Wipro Limited`) and how index option tips (`Sensex 82900 CE`, `Nifty 25500 CE`, `Nifty 25600 CE`) are scoped.
-  - [ ] Define the hand-labelled Hinglish evaluation corpus plan alongside the `<Influencer>__<Stock>__<Registration>` curated media assets.
-  - [ ] Define how synthetic records will be labelled and separated from real data.
-- [ ] Acceptance: no data source is treated as production-ready until access and usage terms are reviewed and its provenance metadata is defined.
+- [x] Document intended NSE/BSE, SEBI, enforcement-order, and curated tip/media corpus inputs (`photos/` and `videos/`).
+  - [x] Record source URL/provider, retrieval method, access date, usage terms, and expected fields.
+  - [x] Confirm whether historical price, volume, market cap, circuit-band, and ASM/GSM snapshots are available for equities (`Borosil Renewables Ltd`, `Sarveshwar Foods`, `Wipro Limited`) and how index option tips (`Sensex 82900 CE`, `Nifty 25500 CE`, `Nifty 25600 CE`) are scoped.
+  - [x] Define the hand-labelled Hinglish evaluation corpus plan alongside the `<Influencer>__<Stock>__<Registration>` curated media assets.
+  - [x] Define how synthetic records will be labelled and separated from real data.
+- [x] Acceptance: no data source is treated as production-ready until access and usage terms are reviewed and its provenance metadata is defined.
 
 ### 1.9 Establish the visual foundation
 
-- [ ] Implement the responsive color, typography, spacing, and status-token system from `PRD.md` and `DESIGN.md`, aligned with `ui-ux/hero.jpeg` and `ui-ux/DashBoard.png` over the verbatim `DashBoardBackground.jsx` shader canvas.
-  - [ ] Build the frosted glass dashboard shell, left sidebar rail (`Dashboard`, `New Analysis`, `Demo Corpus`, `How Checks Work`, and `"We grade the information, not the investment."` callout), and accessible buttons, inputs, cards, badges, alerts, and progress indicators.
-  - [ ] Confirm there is no stock-level red/green verdict treatment, no `"Confidence Score"` / `"Risk Score"`, no persisted `"Past Reports"`, and no `"Live Market Data"` misrepresentation.
-  - [ ] Verify layout at narrow mobile, tablet, and desktop widths.
-- [ ] Acceptance: the application shell matches the approved visual direction and passes basic keyboard/contrast review.
+- [x] Implement the responsive color, typography, spacing, and status-token system from `PRD.md` and `DESIGN.md`, aligned with `ui-ux/hero.jpeg` and `ui-ux/DashBoard.png` over the verbatim `DashBoardBackground.jsx` shader canvas.
+  - [x] Build the frosted glass dashboard shell, left sidebar rail (`Dashboard`, `New Analysis`, `Demo Corpus`, `How Checks Work`, and `"We grade the information, not the investment."` callout), and accessible buttons, inputs, cards, badges, alerts, and progress indicators.
+  - [x] Confirm there is no stock-level red/green verdict treatment, no `"Confidence Score"` / `"Risk Score"`, no persisted `"Past Reports"`, and no `"Live Market Data"` misrepresentation.
+  - [x] Verify layout at narrow mobile, tablet, and desktop widths.
+- [x] Acceptance: the application shell matches the approved visual direction and passes basic keyboard/contrast review.
 
 ## Phase 2 — Core Product Loop
 

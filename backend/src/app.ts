@@ -5,7 +5,9 @@ import helmet from "helmet";
 import { env as defaultEnv, type AppEnv } from "./core/env.js";
 import { buildErrorEnvelope, errorHandler, notFoundHandler } from "./core/errors.js";
 import { requestIdMiddleware } from "./api/middleware/requestId.js";
+import { createAutopsyRouter } from "./api/routes/autopsy.js";
 import { createHealthRouter } from "./api/routes/health.js";
+import { createEvidenceRepository, type EvidenceRepository } from "./db/repository.js";
 import type { DatabaseProbeResult } from "./db/supabase.js";
 
 declare global {
@@ -20,10 +22,12 @@ declare global {
 export interface CreateAppOptions {
   config?: AppEnv;
   probeDb?: (config: AppEnv) => Promise<DatabaseProbeResult>;
+  repo?: EvidenceRepository;
 }
 
 export function createApp(options: CreateAppOptions = {}): Express {
   const config = options.config ?? defaultEnv;
+  const repo = options.repo ?? createEvidenceRepository(config);
   const app = express();
 
   app.disable("x-powered-by");
@@ -69,6 +73,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
   );
 
   app.use("/api", createHealthRouter({ config, probeDb: options.probeDb }));
+  app.use("/api", createAutopsyRouter({ config, repo }));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

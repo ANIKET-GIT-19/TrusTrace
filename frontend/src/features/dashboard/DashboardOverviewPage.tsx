@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -12,38 +13,96 @@ import { Button } from "../../components/ui/Button";
 import { GlassCard } from "../../components/ui/GlassCard";
 import { ProvenancePill } from "../../components/ui/ProvenancePill";
 import { StatusBadge } from "../../components/ui/StatusBadge";
+import { fetchBenchmarks, fetchDemoCases } from "../../lib/apiClient";
 import { CURATED_DEMO_CORPUS } from "../../lib/constants";
+import type { DataLabel } from "../../types/api";
+import { useAutopsy } from "../workflow/AutopsyContext";
 
-const BENCHMARK_CARDS = [
-  {
-    key: "NIFTY_50",
-    label: "NIFTY 50",
-    points: "4,34 24,29 44,31 66,22 86,25 108,15 130,18 152,9",
-  },
-  {
-    key: "SENSEX",
-    label: "SENSEX",
-    points: "4,32 24,28 46,30 68,21 90,23 112,14 132,16 152,8",
-  },
-  {
-    key: "BANKNIFTY",
-    label: "BANKNIFTY",
-    points: "4,35 26,30 48,26 70,28 92,19 114,21 134,12 152,10",
-  },
-] as const;
+function mapDataLabel(label: DataLabel | null): "Real" | "Synthetic / Demo" | "Mixed (Labelled)" {
+  if (label === "REAL") return "Real";
+  if (label === "MIXED") return "Mixed (Labelled)";
+  return "Synthetic / Demo";
+}
+
+function buildSparklinePoints(values: number[]): string {
+  if (values.length < 2) return "4,24 152,24";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  return values
+    .map((v, i) => {
+      const x = 4 + (i / (values.length - 1)) * 148;
+      const y = 34 - ((v - min) / span) * 26;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
 
 export function DashboardOverviewPage() {
   const [quickInput, setQuickInput] = useState("");
   const navigate = useNavigate();
+  const { state, loadDemoCase } = useAutopsy();
+
+  const benchmarksQuery = useQuery({
+    queryKey: ["meta-benchmarks"],
+    queryFn: fetchBenchmarks,
+  });
+
+  const demoCasesQuery = useQuery({
+    queryKey: ["demo-cases"],
+    queryFn: fetchDemoCases,
+  });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     navigate("/analyze", { state: { prefillQuery: quickInput.trim() } });
   }
 
+  const benchmarkList = benchmarksQuery.data ?? [
+    {
+      key: "NIFTY_50" as const,
+      label: "NIFTY 50",
+      status: "COULD_NOT_VERIFY" as const,
+      close: null,
+      change: null,
+      change_percent: null,
+      as_of_date: null,
+      data_label: null,
+      source_name: null,
+      sparkline: [],
+    },
+    {
+      key: "SENSEX" as const,
+      label: "SENSEX",
+      status: "COULD_NOT_VERIFY" as const,
+      close: null,
+      change: null,
+      change_percent: null,
+      as_of_date: null,
+      data_label: null,
+      source_name: null,
+      sparkline: [],
+    },
+    {
+      key: "BANKNIFTY" as const,
+      label: "BANKNIFTY",
+      status: "COULD_NOT_VERIFY" as const,
+      close: null,
+      change: null,
+      change_percent: null,
+      as_of_date: null,
+      data_label: null,
+      source_name: null,
+      sparkline: [],
+    },
+  ];
+
+  const latestAsOf = benchmarkList.find((b) => b.as_of_date)?.as_of_date ?? undefined;
+  const latestLabel = benchmarkList.find((b) => b.data_label)?.data_label ?? null;
+
   return (
     <div className="space-y-6">
-      {/* Top Intake Bar + Compliant Snapshot Status Pill (adapted from ui-ux/DashBoard.png) */}
+      {/* Top Intake Bar + Compliant Snapshot Status Pill */}
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
         <form
           onSubmit={handleSubmit}
@@ -71,16 +130,13 @@ export function DashboardOverviewPage() {
 
         {/* Compliant provenance badge: NEVER "Live Market Data" */}
         <div className="glass-card-subtle flex items-center gap-2.5 rounded-2xl px-4 py-2.5 sm:self-start xl:self-auto">
-          <span
-            className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#4A7C64]"
-            aria-hidden="true"
-          />
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#4A7C64]" aria-hidden="true" />
           <div className="leading-tight">
             <p className="m-0 text-[12.5px] font-semibold text-[#161A18]">
               Dated Market Snapshots · NSE / BSE
             </p>
-            <p className="m-0 text-[11.5px] text-[#6E7771]">
-              Snapshot ingestion activates in Phase 2
+            <p className="tabular-nums-lining m-0 text-[11.5px] text-[#6E7771]">
+              {latestAsOf ? `Snapshot as of ${latestAsOf}` : "Could not verify snapshot date"}
             </p>
           </div>
         </div>
@@ -95,49 +151,62 @@ export function DashboardOverviewPage() {
           >
             Market Overview
           </h1>
-          <ProvenancePill label="Real" asOfDate="Pending Phase 2 Snapshot" />
+          <ProvenancePill
+            label={latestLabel ? mapDataLabel(latestLabel) : "Synthetic / Demo"}
+            asOfDate={latestAsOf}
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {BENCHMARK_CARDS.map((indexCard) => (
-            <GlassCard key={indexCard.key} compact className="flex flex-col justify-between gap-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="m-0 text-[12px] font-semibold tracking-[0.04em] text-[#6E7771] uppercase">
-                    {indexCard.label}
-                  </p>
-                  <p className="tabular-nums-lining mt-1 mb-0 text-[22px] font-bold tracking-[-0.02em] text-[#161A18]">
-                    —
-                  </p>
+          {benchmarkList.map((indexCard) => {
+            const available = indexCard.status === "AVAILABLE" && indexCard.close !== null;
+            return (
+              <GlassCard key={indexCard.key} compact className="flex flex-col justify-between gap-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="m-0 text-[12px] font-semibold tracking-[0.04em] text-[#6E7771] uppercase">
+                      {indexCard.label}
+                    </p>
+                    <p className="tabular-nums-lining mt-1 mb-0 text-[22px] font-bold tracking-[-0.02em] text-[#161A18]">
+                      {available
+                        ? indexCard.close!.toLocaleString("en-IN", { minimumFractionDigits: 2 })
+                        : "—"}
+                    </p>
+                  </div>
+                  {available ? (
+                    <span className="tabular-nums-lining rounded-full bg-[#E6F2EC] px-2.5 py-1 text-[11.5px] font-semibold text-[#1F4D3A]">
+                      {indexCard.change !== null && indexCard.change >= 0 ? "+" : ""}
+                      {indexCard.change_percent}%
+                    </span>
+                  ) : (
+                    <StatusBadge tone="unverified" label="Could not verify" />
+                  )}
                 </div>
-                <StatusBadge tone="unverified" label="Could not verify" />
-              </div>
 
-              <div className="flex items-end justify-between gap-3">
-                <p className="m-0 text-[12px] text-[#6E7771]">
-                  Awaiting verified dated index snapshot
-                </p>
-                <svg
-                  viewBox="0 0 156 40"
-                  className="h-8 w-24 shrink-0 opacity-45"
-                  aria-hidden="true"
-                >
-                  <polyline
-                    fill="none"
-                    stroke="#4A7C64"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    points={indexCard.points}
-                  />
-                </svg>
-              </div>
-            </GlassCard>
-          ))}
+                <div className="flex items-end justify-between gap-3">
+                  <p className="tabular-nums-lining m-0 text-[12px] text-[#6E7771]">
+                    {available && indexCard.as_of_date
+                      ? `${mapDataLabel(indexCard.data_label)} · As of ${indexCard.as_of_date}`
+                      : "Snapshot unavailable"}
+                  </p>
+                  <svg viewBox="0 0 156 40" className="h-8 w-24 shrink-0" aria-hidden="true">
+                    <polyline
+                      fill="none"
+                      stroke="#3B8E6A"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      points={buildSparklinePoints(indexCard.sparkline.map((s) => s.close))}
+                    />
+                  </svg>
+                </div>
+              </GlassCard>
+            );
+          })}
         </div>
       </section>
 
-      {/* Curated Demo & In-Session Analyses Table (Compliant replacement for mockup's "Past Reports" & "Confidence Score") */}
+      {/* Curated Demo & In-Session Analyses Table */}
       <section aria-labelledby="demo-analyses-heading" className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -148,8 +217,8 @@ export function DashboardOverviewPage() {
               Curated Demo &amp; In-Session Analyses
             </h2>
             <p className="mt-0.5 mb-0 text-[13px] text-[#6E7771]">
-              Zero history is persisted across sessions. Select any curated sample to preview the
-              analysis flow.
+              Zero history is persisted across sessions. Select any curated sample to inspect the
+              full five-step autopsy.
             </p>
           </div>
           <Button variant="ghost" onClick={() => navigate("/corpus")} className="h-9 px-3 text-[13px]">
@@ -166,64 +235,120 @@ export function DashboardOverviewPage() {
                   <th className="px-5 py-3.5">Tip / Stock &amp; Instrument</th>
                   <th className="px-4 py-3.5">Creator &amp; Media</th>
                   <th className="px-4 py-3.5">SEBI Snapshot</th>
-                  <th className="px-4 py-3.5">Evidence Status</th>
+                  <th className="px-4 py-3.5">Evidence Scope</th>
                   <th className="px-5 py-3.5 text-right">Provenance</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[rgba(22,26,24,0.07)] text-[14px]">
-                {CURATED_DEMO_CORPUS.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="transition-colors hover:bg-white/60"
-                  >
-                    <td className="px-5 py-3.5">
-                      <button
-                        type="button"
-                        onClick={() => navigate("/analyze", { state: { selectedDemoId: item.id } })}
-                        className="group flex flex-col text-left cursor-pointer"
-                      >
-                        <span className="font-semibold text-[#161A18] group-hover:text-[#1F4D3A]">
-                          {item.instrument}
-                        </span>
-                        <span className="text-[12px] text-[#6E7771]">{item.note}</span>
-                      </button>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2 text-[#161A18]">
-                        {item.mediaType === "Photo" ? (
-                          <ImageIcon size={16} weight="duotone" className="text-[#4A7C64]" aria-hidden="true" />
-                        ) : (
-                          <FilmStrip size={16} weight="duotone" className="text-[#4A7C64]" aria-hidden="true" />
-                        )}
-                        <div>
-                          <div className="font-medium">{item.influencer}</div>
-                          {item.alias && (
-                            <div className="text-[12px] text-[#6E7771]">{item.alias}</div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <StatusBadge tone="unverified" label={item.corpusTag} />
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <StatusBadge
-                        tone={item.instrumentType === "DERIVATIVE" ? "unverified" : "attention"}
-                        label={
-                          item.instrumentType === "DERIVATIVE"
-                            ? "Could not verify (Derivative)"
-                            : "Snapshot pending"
-                        }
-                      />
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(22,26,24,0.09)] bg-[#EFECE6] px-2.5 py-1 text-[11.5px] font-semibold text-[#4A524D]">
-                        <Database size={12} weight="regular" aria-hidden="true" />
-                        {item.provenance}
+                {state.inSessionRuns.map((run) => (
+                  <tr key={run.id} className="bg-[#E6F2EC]/30">
+                    <td className="px-5 py-3.5 font-semibold text-[#161A18]">
+                      {run.instrumentName}
+                      <span className="ml-2 text-[11.5px] font-medium text-[#1F4D3A]">
+                        (In-session)
                       </span>
+                    </td>
+                    <td className="px-4 py-3.5 text-[#4A524D]">{run.influencerName}</td>
+                    <td className="px-4 py-3.5">
+                      <StatusBadge tone="unverified" label={run.sebiStatus} />
+                    </td>
+                    <td className="tabular-nums-lining px-4 py-3.5 text-[13px] text-[#4A524D]">
+                      Tip date: {run.tipDate}
+                    </td>
+                    <td className="px-5 py-3.5 text-right text-[12px] text-[#6E7771]">
+                      In-memory only
                     </td>
                   </tr>
                 ))}
+
+                {(demoCasesQuery.data ?? []).length > 0
+                  ? (demoCasesQuery.data ?? []).map((item) => (
+                      <tr key={item.id} className="transition-colors hover:bg-white/60">
+                        <td className="px-5 py-3.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              loadDemoCase(item);
+                              navigate("/analyze");
+                            }}
+                            className="group flex cursor-pointer flex-col text-left"
+                          >
+                            <span className="font-semibold text-[#161A18] group-hover:text-[#1F4D3A]">
+                              {item.instrument_name}
+                            </span>
+                            <span className="text-[12px] text-[#6E7771]">{item.coverage_note}</span>
+                          </button>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-2 text-[#161A18]">
+                            {item.media_type === "PHOTO" ? (
+                              <ImageIcon
+                                size={16}
+                                weight="duotone"
+                                className="text-[#4A7C64]"
+                                aria-hidden="true"
+                              />
+                            ) : (
+                              <FilmStrip
+                                size={16}
+                                weight="duotone"
+                                className="text-[#4A7C64]"
+                                aria-hidden="true"
+                              />
+                            )}
+                            <div>
+                              <div className="font-medium">{item.influencer_name}</div>
+                              {item.alias && (
+                                <div className="text-[12px] text-[#6E7771]">{item.alias}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <StatusBadge
+                            tone={item.sebi_expected_status === "REGISTERED" ? "neutral_ok" : "unverified"}
+                            label={
+                              item.sebi_expected_status === "REGISTERED"
+                                ? "Registered"
+                                : "Not found in SEBI register"
+                            }
+                          />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <StatusBadge
+                            tone={item.instrument_type === "DERIVATIVE" ? "unverified" : "attention"}
+                            label={
+                              item.instrument_type === "DERIVATIVE"
+                                ? "Could not verify (Derivative)"
+                                : "5-Check Equity"
+                            }
+                          />
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(22,26,24,0.09)] bg-[#EFECE6] px-2.5 py-1 text-[11.5px] font-semibold text-[#4A524D]">
+                            <Database size={12} weight="regular" aria-hidden="true" />
+                            Curated Demo · Mixed
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  : CURATED_DEMO_CORPUS.map((item) => (
+                      <tr key={item.id} className="transition-colors hover:bg-white/60">
+                        <td className="px-5 py-3.5 font-semibold text-[#161A18]">
+                          {item.instrument}
+                        </td>
+                        <td className="px-4 py-3.5 text-[#161A18]">{item.influencer}</td>
+                        <td className="px-4 py-3.5">
+                          <StatusBadge tone="unverified" label={item.corpusTag} />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <StatusBadge tone="unverified" label={item.instrumentType} />
+                        </td>
+                        <td className="px-5 py-3.5 text-right text-[12px] text-[#4A524D]">
+                          {item.provenance}
+                        </td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>

@@ -1,13 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DashboardLayout } from "./DashboardLayout";
+import { AnalyzeWorkspacePage } from "../features/analyze/AnalyzeWorkspacePage";
 import { DashboardOverviewPage } from "../features/dashboard/DashboardOverviewPage";
 import {
   DemoCorpusPage,
   HowChecksWorkPage,
-  NewAnalysisShellPage,
 } from "../features/dashboard/WorkspacePlaceholderPages";
 import { HeroPage } from "../features/hero/HeroPage";
+import { AutopsyProvider } from "../features/workflow/AutopsyContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +26,7 @@ export function AppRoutes() {
       <Route path="/" element={<HeroPage />} />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<DashboardOverviewPage />} />
-        <Route path="/analyze" element={<NewAnalysisShellPage />} />
+        <Route path="/analyze" element={<AnalyzeWorkspacePage />} />
         <Route path="/corpus" element={<DemoCorpusPage />} />
         <Route path="/how-it-works" element={<HowChecksWorkPage />} />
       </Route>
@@ -37,9 +38,11 @@ export function AppRoutes() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <AutopsyProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AutopsyProvider>
     </QueryClientProvider>
   );
 }

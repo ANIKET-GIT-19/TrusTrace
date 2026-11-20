@@ -1,9 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { AppRoutes } from "./app/App";
 import { StatusBadge } from "./components/ui/StatusBadge";
+import { PauseAndPlanGate } from "./features/pause-plan/PauseAndPlanGate";
+import { AutopsyProvider } from "./features/workflow/AutopsyContext";
 import { CORE_PRODUCT_RULE, MANDATORY_DISCLAIMER } from "./lib/constants";
 
 // Stub WebGL2 background in jsdom tests while keeping DashBoardBackground.jsx untouched
@@ -17,14 +19,16 @@ function renderRoute(initialEntry: string) {
   });
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <AppRoutes />
-      </MemoryRouter>
+      <AutopsyProvider>
+        <MemoryRouter initialEntries={[initialEntry]}>
+          <AppRoutes />
+        </MemoryRouter>
+      </AutopsyProvider>
     </QueryClientProvider>
   );
 }
 
-describe("Tip Autopsy Phase 1 Visual & Shell Foundation", () => {
+describe("Tip Autopsy Phase 1 & 2 Frontend Guardrails", () => {
   it("renders the hero composition matching ui-ux/hero.jpeg with 5 creator panels and non-advisory framing", () => {
     renderRoute("/");
 
@@ -33,8 +37,6 @@ describe("Tip Autopsy Phase 1 Visual & Shell Foundation", () => {
     expect(screen.getByRole("button", { name: /Analyze a Tip/i })).toBeInTheDocument();
     expect(screen.getByText(CORE_PRODUCT_RULE)).toBeInTheDocument();
     expect(screen.getByText(MANDATORY_DISCLAIMER)).toBeInTheDocument();
-
-    // Ensure all 5 hero creator panels are present in desktop strip
     expect(screen.getAllByAltText(/Illustrative finfluencer/i).length).toBeGreaterThanOrEqual(5);
   });
 
@@ -49,7 +51,6 @@ describe("Tip Autopsy Phase 1 Visual & Shell Foundation", () => {
     expect(screen.getByText("SENSEX")).toBeInTheDocument();
     expect(screen.getByText("BANKNIFTY")).toBeInTheDocument();
 
-    // Verify mockup violations are strictly absent
     expect(screen.queryByText(/Live Market Data/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Confidence Score/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Past Reports/i)).not.toBeInTheDocument();
@@ -67,5 +68,40 @@ describe("Tip Autopsy Phase 1 Visual & Shell Foundation", () => {
     expect(screen.getByText("Within normal range")).toBeInTheDocument();
     expect(screen.getByText("Needs attention")).toBeInTheDocument();
     expect(screen.getByText("Could not verify")).toBeInTheDocument();
+  });
+
+  it("gates Pause & Plan until all three questions are answered and never writes to browser storage", () => {
+    const storageSpy = vi.spyOn(Storage.prototype, "setItem");
+
+    render(
+      <AutopsyProvider>
+        <PauseAndPlanGate />
+      </AutopsyProvider>
+    );
+
+    const submitBtn = screen.getByRole("button", { name: /I'd act on this/i });
+    expect(submitBtn).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText(/How much can I afford to lose/i), {
+      target: { value: "₹5,000" },
+    });
+    expect(submitBtn).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText(/At what price do I exit/i), {
+      target: { value: "₹580 stop" },
+    });
+    expect(submitBtn).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText(/What would prove this tip wrong/i), {
+      target: { value: "Volume collapses and closes below prior support" },
+    });
+    expect(submitBtn).toBeEnabled();
+
+    fireEvent.click(submitBtn);
+    expect(screen.getByText(/Personal pre-commitment review completed/i)).toBeInTheDocument();
+
+    // Strict privacy invariant: zero browser storage writes
+    expect(storageSpy).not.toHaveBeenCalled();
+    storageSpy.mockRestore();
   });
 });
